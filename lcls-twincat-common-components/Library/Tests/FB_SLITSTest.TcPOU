@@ -1,9 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <TcPlcObject Version="1.1.0.1">
   <POU Name="FB_SLITSTest" Id="{0846e309-86fd-4534-9c75-1bd0de4d2cd4}" SpecialFunc="None">
-    <Declaration><![CDATA[(* Tests for the plain (non-power) FB_SLITS: the PMPS aperture checks that
-   scatter slits use. Logic only, no axis motion: the actual aperture is set
-   directly and the FFO state is read back after each call. *)
+    <Declaration><![CDATA[(* Tests for the plain FB_SLITS: the legacy M_CheckPMPS aperture check and the
+   unlimited gap request that scatter slits use. Logic only, no axis motion:
+   the actual aperture is set directly and the FFO state is read back after
+   each call. *)
 FUNCTION_BLOCK FB_SLITSTest EXTENDS FB_TestSuite
 VAR
     axRef : ARRAY[1..4] OF AXIS_REF;
@@ -29,14 +30,13 @@ VAR
     fbSlits : FB_SLITS(
         aiMotionStage   := aiMotionStage,
         fbFFHWO         := fbFFHWO,
-        sDeviceName     := 'SL1K3:SCATTER',
-        fApertureMargin := 0.01
+        sDeviceName     := 'SL1K3:SCATTER'
     );
 END_VAR
 ]]></Declaration>
     <Implementation>
       <ST><![CDATA[TestCheckPMPS();
-TestUpdatePMPS();
+TestUnlimitedGap();
 ]]></ST>
     </Implementation>
     <Method Name="CheckCase" Id="{663c1d5c-a74a-4d7f-b042-33f8954cc6ac}">
@@ -102,48 +102,29 @@ TEST_FINISHED();
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="TestUpdatePMPS" Id="{fc857094-a6a4-4443-91b5-a76c9ce5752f}">
-      <Declaration><![CDATA[(* M_UpdatePMPS on a plain FB_SLITS (no RTDs, no flow switch): status mirror,
-   fault on an actual gap above the trusted request, snap-back of the request,
-   and the Local mode fault. *)
-METHOD TestUpdatePMPS
+    <Method Name="TestUnlimitedGap" Id="{76462dd8-8bd7-4821-9c50-b0d687b6f942}">
+      <Declaration><![CDATA[(* The base type has no aperture limit: a changed gap request is accepted
+   whatever its size (legacy scatter slit behavior), flags the motion for the
+   axis and sets the blade targets from the requested gap. *)
+METHOD TestUnlimitedGap
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[TEST('TestSlitsUpdatePMPS');
+        <ST><![CDATA[TEST('TestSlitsUnlimitedGap');
 
-PMPS_GVL.stCurrentBeamParameters.astApertures[1].Width  := 100.0;
-PMPS_GVL.stCurrentBeamParameters.astApertures[1].Height := 100.0;
-fbSlits.bBridgeOK := TRUE;
-fbSlits.bBridgeConfirmedBad := FALSE;
-fbSlits.xPMPSMode := TRUE;
-fbSlits.SetAptWidthHeight(Width := 50.0, Height := 40.0);
+fbSlits.bExecuteMotionX := FALSE;
+fbSlits.bExecuteMotionY := FALSE;
+fbSlits.SetApertureRequest(ApertureSizeX := 1000.0, ApertureSizeY := 800.0, CenterX := 0.0, CenterY := 0.0);
+fbSlits.M_CalculatePositions();
 
-// Inside the authorized envelope.
-fbSlits.rActApertureSizeX := 20.0;
-fbSlits.rActApertureSizeY := 10.0;
-fbSlits.rActCenterX := 0.0;
-fbSlits.rActCenterY := 0.0;
-fbSlits.M_UpdatePMPS(1);
-AssertTrue(fbSlits.FFO.i_xOK, 'gap inside the trusted request leaves the FFO ok');
-AssertTrue(
-    fbSlits.AptArrayStatus.Width = 20.0 AND fbSlits.AptArrayStatus.Height = 10.0,
-    'actual gap mirrored into AptArrayStatus'
-);
+AssertTrue(fbSlits.bExecuteMotionX, 'large X gap request dispatches X motion');
+AssertTrue(fbSlits.bExecuteMotionY, 'large Y gap request dispatches Y motion');
+AssertTrue(fbSlits.rOldReqApertureSizeX = 1000.0, 'large X gap request latched');
+AssertTrue(fbSlits.rOldReqApertureSizeY = 800.0, 'large Y gap request latched');
+AssertTrue(fbSlits.fPosNorthBlade = 500.0 AND fbSlits.fPosSouthBlade = -500.0, 'X blade targets from the requested gap');
+AssertTrue(fbSlits.fPosTopBlade = 400.0 AND fbSlits.fPosBottomBlade = -400.0, 'Y blade targets from the requested gap');
 
-// Actual X gap above the trusted width: fault and snap the request back.
-fbSlits.rActApertureSizeX := 60.0;
-fbSlits.M_UpdatePMPS(1);
-AssertFalse(fbSlits.FFO.i_xOK, 'gap above the trusted request faults the FFO');
-AssertTrue(fbSlits.rReqApertureSizeX = 49.99, 'request snapped to the trusted width minus the margin');
-
-// Local mode always faults.
-fbSlits.rActApertureSizeX := 20.0;
-fbSlits.xPMPSMode := FALSE;
-fbSlits.M_UpdatePMPS(1);
-AssertFalse(fbSlits.FFO.i_xOK, 'Local mode faults the FFO');
-
-// Leave the instance in PMPS mode.
-fbSlits.xPMPSMode := TRUE;
+fbSlits.bExecuteMotionX := FALSE;
+fbSlits.bExecuteMotionY := FALSE;
 TEST_FINISHED();
 ]]></ST>
       </Implementation>

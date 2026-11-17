@@ -207,6 +207,9 @@
       <SubType>Code</SubType>
       <ExcludeFromBuild>false</ExcludeFromBuild>
     </Compile>
+    <Compile Include="Tests\FB_SLITSTest.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Tests\FB_SLITS_POWERTest.TcPOU">
       <SubType>Code</SubType>
     </Compile>

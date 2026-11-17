@@ -1,0 +1,131 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <POU Name="FB_SLITSTest" Id="{0846e309-86fd-4534-9c75-1bd0de4d2cd4}" SpecialFunc="None">
+    <Declaration><![CDATA[(* Tests for the plain (non-power) FB_SLITS: the PMPS aperture checks that
+   scatter slits use. Logic only, no axis motion: the actual aperture is set
+   directly and the FFO state is read back after each call. *)
+FUNCTION_BLOCK FB_SLITSTest EXTENDS FB_TestSuite
+VAR
+    axRef : ARRAY[1..4] OF AXIS_REF;
+
+    fbPDS : LCLS_Tc_DevAbs.FB_PersistentDataStorage;
+
+    afbMotor : ARRAY[1..4] OF FB_MotionStageNC[
+        (AxisRef := axRef[E_SlitsBlade.TOP],    iPersistentDataStorage := fbPDS, sName := 'Top'),
+        (AxisRef := axRef[E_SlitsBlade.BOTTOM], iPersistentDataStorage := fbPDS, sName := 'Bottom'),
+        (AxisRef := axRef[E_SlitsBlade.NORTH],  iPersistentDataStorage := fbPDS, sName := 'North'),
+        (AxisRef := axRef[E_SlitsBlade.SOUTH],  iPersistentDataStorage := fbPDS, sName := 'South')
+    ];
+
+    aiMotionStage : ARRAY[1..4] OF I_MotionStage := [
+        afbMotor[E_SlitsBlade.TOP],
+        afbMotor[E_SlitsBlade.BOTTOM],
+        afbMotor[E_SlitsBlade.NORTH],
+        afbMotor[E_SlitsBlade.SOUTH]
+    ];
+
+    fbFFHWO : FB_HardwareFFOutput;
+
+    fbSlits : FB_SLITS(
+        aiMotionStage   := aiMotionStage,
+        fbFFHWO         := fbFFHWO,
+        sDeviceName     := 'SL1K3:SCATTER',
+        fApertureMargin := 0.01
+    );
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[TestCheckPMPS();
+TestUpdatePMPS();
+]]></ST>
+    </Implementation>
+    <Method Name="CheckCase" Id="{663c1d5c-a74a-4d7f-b042-33f8954cc6ac}">
+      <Declaration><![CDATA[(* Sets the actual gap and the PMPS aperture, runs M_CheckPMPS and asserts the
+   FFO state. bExpectOk is the expected FFO.i_xOK. *)
+METHOD CheckCase
+VAR_INPUT
+    fActX     : REAL;
+    fActY     : REAL;
+    fPmpsW    : REAL;
+    fPmpsH    : REAL;
+    bExpectOk : BOOL;
+    sMessage  : STRING;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[PMPS_GVL.stCurrentBeamParameters.astApertures[2].Width  := fPmpsW;
+PMPS_GVL.stCurrentBeamParameters.astApertures[2].Height := fPmpsH;
+fbSlits.rActApertureSizeX := fActX;
+fbSlits.rActApertureSizeY := fActY;
+fbSlits.M_CheckPMPS(2);
+AssertTrue(fbSlits.FFO.i_xOK = bExpectOk, sMessage);
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="TestCheckPMPS" Id="{c84f77ad-9356-474f-b632-c55e3a3bbdf4}">
+      <Declaration><![CDATA[(* Pins the deployed M_CheckPMPS truth table. The FFO faults when either actual
+   gap is below the PMPS aperture plus 0.001, and clears only when both are
+   above it. This is the behavior shipped in the per-PLC copies, kept as is. *)
+METHOD TestCheckPMPS
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[TEST('TestSlitsCheckPMPS');
+
+CheckCase(20.0,    20.0,    10.0, 10.0, TRUE,  'both gaps above the PMPS aperture clears the fault');
+CheckCase(5.0,     20.0,    10.0, 10.0, FALSE, 'X gap below the PMPS width faults');
+CheckCase(20.0,    5.0,     10.0, 10.0, FALSE, 'Y gap below the PMPS height faults');
+CheckCase(10.0005, 20.0,    10.0, 10.0, FALSE, 'X gap inside the 0.001 margin faults');
+CheckCase(10.002,  10.002,  10.0, 10.0, TRUE,  'both gaps just above the margin clears the fault');
+
+TEST_FINISHED();
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="TestUpdatePMPS" Id="{fc857094-a6a4-4443-91b5-a76c9ce5752f}">
+      <Declaration><![CDATA[(* M_UpdatePMPS on a plain FB_SLITS (no RTDs, no flow switch): status mirror,
+   fault on an actual gap above the trusted request, snap-back of the request,
+   and the Local mode fault. *)
+METHOD TestUpdatePMPS
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[TEST('TestSlitsUpdatePMPS');
+
+PMPS_GVL.stCurrentBeamParameters.astApertures[1].Width  := 100.0;
+PMPS_GVL.stCurrentBeamParameters.astApertures[1].Height := 100.0;
+fbSlits.bBridgeOK := TRUE;
+fbSlits.bBridgeConfirmedBad := FALSE;
+fbSlits.xPMPSMode := TRUE;
+fbSlits.SetAptWidthHeight(Width := 50.0, Height := 40.0);
+
+// Inside the authorized envelope.
+fbSlits.rActApertureSizeX := 20.0;
+fbSlits.rActApertureSizeY := 10.0;
+fbSlits.rActCenterX := 0.0;
+fbSlits.rActCenterY := 0.0;
+fbSlits.M_UpdatePMPS(1);
+AssertTrue(fbSlits.FFO.i_xOK, 'gap inside the trusted request leaves the FFO ok');
+AssertTrue(
+    fbSlits.AptArrayStatus.Width = 20.0 AND fbSlits.AptArrayStatus.Height = 10.0,
+    'actual gap mirrored into AptArrayStatus'
+);
+
+// Actual X gap above the trusted width: fault and snap the request back.
+fbSlits.rActApertureSizeX := 60.0;
+fbSlits.M_UpdatePMPS(1);
+AssertFalse(fbSlits.FFO.i_xOK, 'gap above the trusted request faults the FFO');
+AssertTrue(fbSlits.rReqApertureSizeX = 49.99, 'request snapped to the trusted width minus the margin');
+
+// Local mode always faults.
+fbSlits.rActApertureSizeX := 20.0;
+fbSlits.xPMPSMode := FALSE;
+fbSlits.M_UpdatePMPS(1);
+AssertFalse(fbSlits.FFO.i_xOK, 'Local mode faults the FFO');
+
+// Leave the instance in PMPS mode.
+fbSlits.xPMPSMode := TRUE;
+TEST_FINISHED();
+]]></ST>
+      </Implementation>
+    </Method>
+  </POU>
+</TcPlcObject>

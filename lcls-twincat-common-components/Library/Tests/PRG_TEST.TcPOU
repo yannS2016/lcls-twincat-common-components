@@ -15,6 +15,7 @@ VAR
     fbPPMTest: FB_PPMTest;
     fbREFTest: FB_REFTest;
     fbSATTTest: FB_SATTTest;
+    fbSlitsTest: FB_SLITSTest;
     fbSlitsPowerTest: FB_SLITS_POWERTest;
     fbWFSTest: FB_WFSTest;
     fbXPIMTest: FB_XPIMTest;

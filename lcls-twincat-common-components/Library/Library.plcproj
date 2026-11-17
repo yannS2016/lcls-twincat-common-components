@@ -107,6 +107,9 @@
     <Compile Include="Devices\SATT\ST_SATT_Filter.TcDUT">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Devices\SLITS\E_SlitsAxis.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Devices\SLITS\E_SlitsBlade.TcDUT">
       <SubType>Code</SubType>
     </Compile>
@@ -114,6 +117,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Devices\SLITS\FB_SLITS_POWER.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Devices\SLITS\FB_SLITS_THERMAL.TcPOU">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Devices\WFS\E_WFS_States.TcDUT">

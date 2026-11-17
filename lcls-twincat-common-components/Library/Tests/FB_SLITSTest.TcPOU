@@ -65,17 +65,38 @@ AssertTrue(fbSlits.FFO.i_xOK = bExpectOk, sMessage);
     <Method Name="TestCheckPMPS" Id="{c84f77ad-9356-474f-b632-c55e3a3bbdf4}">
       <Declaration><![CDATA[(* Pins the deployed M_CheckPMPS truth table. The FFO faults when either actual
    gap is below the PMPS aperture plus 0.001, and clears only when both are
-   above it. This is the behavior shipped in the per-PLC copies, kept as is. *)
+   above it. This is the behavior shipped in the per-PLC copies, kept as is.
+   It also checks the input protection: the PMPS aperture holds its last good
+   value while the bridge is down or the reading is NaN/Inf. *)
 METHOD TestCheckPMPS
+VAR
+    dwBits : DWORD;
+    pReal  : POINTER TO REAL;
+END_VAR
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[TEST('TestSlitsCheckPMPS');
+
+pReal := ADR(dwBits);
+fbSlits.bBridgeOK := TRUE;
 
 CheckCase(20.0,    20.0,    10.0, 10.0, TRUE,  'both gaps above the PMPS aperture clears the fault');
 CheckCase(5.0,     20.0,    10.0, 10.0, FALSE, 'X gap below the PMPS width faults');
 CheckCase(20.0,    5.0,     10.0, 10.0, FALSE, 'Y gap below the PMPS height faults');
 CheckCase(10.0005, 20.0,    10.0, 10.0, FALSE, 'X gap inside the 0.001 margin faults');
 CheckCase(10.002,  10.002,  10.0, 10.0, TRUE,  'both gaps just above the margin clears the fault');
+
+// Bridge down: the PMPS aperture holds at 10.0, so a 20.0 gap stays ok even
+// though the raw data now says 100.0 (raw data alone would fault).
+CheckCase(20.0, 20.0, 10.0, 10.0, TRUE, 'gap ok before the bridge goes down');
+fbSlits.bBridgeOK := FALSE;
+CheckCase(20.0, 20.0, 100.0, 100.0, TRUE, 'bridge down holds the last PMPS aperture');
+fbSlits.bBridgeOK := TRUE;
+CheckCase(20.0, 20.0, 100.0, 100.0, FALSE, 'bridge back, the new PMPS aperture applies');
+
+// NaN width with a healthy bridge: the last good width (100.0) is kept.
+dwBits := 16#7FC00000;
+CheckCase(20.0, 200.0, pReal^, 100.0, FALSE, 'NaN PMPS width keeps the last good width');
 
 TEST_FINISHED();
 ]]></ST>

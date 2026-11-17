@@ -215,6 +215,12 @@ VAR
     // TRUE when bBridgeOK AND AptArrayReq.xOK.
     bAptTrusted   : BOOL;
     bOverAperture : BOOL;
+
+    (* Sanitizers for the PMPS aperture read by M_CheckPMPS from
+       PMPS_GVL.stCurrentBeamParameters.astApertures. Gated on bBridgeOK only:
+       that data has no xOK flag. *)
+    fbCheckAptWidth  : FB_FallibleRealFromEtherCAT(tHeartbeatExpirationTime := T#1S);
+    fbCheckAptHeight : FB_FallibleRealFromEtherCAT(tHeartbeatExpirationTime := T#1S);
     rBadXOK       : R_TRIG;
 
     (* REF backing fields, populated by FB_Init. *)
@@ -286,6 +292,8 @@ THIS^.sDeviceName   := sDeviceName;
 THIS^.fApertureMargin := fApertureMargin;
 fbTrustedAptWidth.sName  := CONCAT(sDeviceName, ' aperture width');
 fbTrustedAptHeight.sName := CONCAT(sDeviceName, ' aperture height');
+fbCheckAptWidth.sName    := CONCAT(sDeviceName, ' PMPS check width');
+fbCheckAptHeight.sName   := CONCAT(sDeviceName, ' PMPS check height');
 ]]></ST>
       </Implementation>
     </Method>
@@ -314,21 +322,33 @@ END_IF
       </Implementation>
     </Method>
     <Method Name="M_CheckPMPS" Id="{2340e24c-17b3-4b83-9a88-189f8479d873}">
-      <Declaration><![CDATA[(* Legacy PMPS aperture check, carried over unchanged from the per-PLC
-         FB_SLITS copies (SL1K3, SL1K4). Faults the FFO from a comparison of the
-         actual gaps with PMPS_GVL.stCurrentBeamParameters.astApertures[index]
-         plus 0.001. It does not use the arbiter bridge, the trusted request or
-         xPMPSMode, and does not write AptArrayStatus. Kept as deployed so
-         existing devices behave the same; call either this or M_UpdatePMPS,
-         never both. *)
+      <Declaration><![CDATA[(* Legacy PMPS aperture check from the per-PLC FB_SLITS copies (SL1K3, SL1K4).
+         Faults the FFO from a comparison of the actual gaps with
+         PMPS_GVL.stCurrentBeamParameters.astApertures[index] plus 0.001. The
+         comparison is unchanged. The only addition is input protection: each
+         aperture value goes through FB_FallibleRealFromEtherCAT, which holds the
+         last good value while the arbiter bridge is down (bBridgeOK) or the
+         reading is NaN/Inf. With a healthy bridge and finite data it behaves as
+         deployed. It does not use xPMPSMode or the trusted request, and does
+         not write AptArrayStatus. Call either this or M_UpdatePMPS, never
+         both. *)
 METHOD M_CheckPMPS : BOOL
 VAR_INPUT
     index : INT;
 END_VAR
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[IF (rActApertureSizeX < (PMPS_GVL.stCurrentBeamParameters.astApertures[index].Width + 0.001))
-   OR (rActApertureSizeY < (PMPS_GVL.stCurrentBeamParameters.astApertures[index].Height + 0.001)) THEN
+        <ST><![CDATA[fbCheckAptWidth(
+    i_bBridgeOk := bBridgeOK,
+    i_fValue    := PMPS_GVL.stCurrentBeamParameters.astApertures[index].Width
+);
+fbCheckAptHeight(
+    i_bBridgeOk := bBridgeOK,
+    i_fValue    := PMPS_GVL.stCurrentBeamParameters.astApertures[index].Height
+);
+
+IF (rActApertureSizeX < (fbCheckAptWidth.fValue + 0.001))
+   OR (rActApertureSizeY < (fbCheckAptHeight.fValue + 0.001)) THEN
     FFO.i_xOK := FALSE;
 ELSE
     FFO.i_xOK := TRUE;

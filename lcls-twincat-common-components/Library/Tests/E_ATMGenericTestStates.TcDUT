@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <DUT Name="E_ATMGenericTestStates" Id="{d06de58d-d808-4084-8fd3-056a4a88b369}">
+    <Declaration><![CDATA[(* Test-only state list with eight targets, longer than E_ATM_States. *)
+{attribute 'qualified_only'}
+TYPE E_ATMGenericTestStates :
+(
+    Unknown := 0,
+    OUT := 1,
+    TARGET1 := 2,
+    TARGET2 := 3,
+    TARGET3 := 4,
+    TARGET4 := 5,
+    TARGET5 := 6,
+    TARGET6 := 7,
+    TARGET7 := 8,
+    TARGET8 := 9
+) UINT;
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

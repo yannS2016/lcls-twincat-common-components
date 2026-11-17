@@ -53,6 +53,9 @@
     <Compile Include="Devices\ATM\FB_ATM.TcPOU">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Devices\ATM\FB_ATM_Generic.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Devices\LIC\E_LIC_States.TcDUT">
       <SubType>Code</SubType>
     </Compile>
@@ -182,7 +185,13 @@
     <Compile Include="POUs\FB_XTES_Flowswitch.TcPOU">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Tests\E_ATMGenericTestStates.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Tests\FB_ATMTest.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Tests\FB_ATM_GenericTest.TcPOU">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Tests\FB_CC_TempSensorTest.TcPOU">

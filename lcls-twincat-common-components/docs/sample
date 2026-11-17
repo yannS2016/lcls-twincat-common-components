@@ -1,0 +1,740 @@
+<ac:structured-macro ac:macro-id="ceda5610-5e09-427f-8546-f3b2035442ff" ac:name="info" ac:schema-version="1">
+  <ac:parameter ac:name="title">Context</ac:parameter>
+  <ac:rich-text-body>
+    <p>This page is for TwinCAT PLC developers already using the LCLS TwinCAT Motion Library v1 and would like to start using v2. The page provides additional information and best practices for using v2 of the motion library going forward. It covers what the library is for, the version to use, the dependencies that must be in place, and the configuration parameters you set before writing and deploying a PLC application code. Worked sample programs are provided separately to walk through each application pattern end-to-end</p>
+  </ac:rich-text-body>
+</ac:structured-macro>
+<h2>Overview</h2>
+<p>The motion library v2 provides a layered abstraction for Hutches' motion control only for Beckhoff/TwinCAT 4026 and onwards. It lets an application author wire up single-axis devices, multi-axis named-position "state movers" (parallel or sequential), and PMPS-integrated devices without re-implementing the underlying motion, persistence, and protection logic.</p>
+<p>The library is organized in layers, from lowest to highest:</p>
+<ul>
+  <li data-uuid="0bd4b672-9a97-49cd-bc6b-2d61c42a3f2d">
+    <strong>Drive layer</strong>: single-axis abstraction: hardware or simulated axes, persistent parameters, limits and interlocks, and the motion-request state machine. Motion parameters (velocity, acceleration, deceleration, jerk) are owned at this layer and persist across PLC restarts. The drive layer also ships optional integrations: EPS interlocks, gantry auto-coupling, and a backlash-compensation wrapper around <code>MC_BacklashCompensation</code>.</li>
+  <li data-uuid="d489df0e-e31b-4b43-b5f8-772d28841b42">
+    <strong>State-mover layer</strong>: moves N motors to named position states, either in parallel (<code>FB_PositionStateND</code>) or sequentially (<code>FB_PositionStateSequenceND</code>).</li>
+  <li data-uuid="dea0b463-c038-4610-9d47-0be99a4a398c">
+    <strong>PMPS layer</strong>: adds beam-parameter management and machine-protection enforcement on top of the state movers (<code>FB_PositionStatePMPSND, FB_PositionStateSequencePMPSND</code>).</li>
+</ul>
+<p>Each layer builds on the one below it. A simple device needs only the drive layer; a multi-position device adds the state-mover layer; a protection-aware device adds the PMPS layer.</p>
+<h2>Library Version &amp; Platform Compatibility</h2>
+<p>Use this version: <code>LCLS_Tc_Motion releases v2.1.0</code>
+</p>
+<p>Requirement:<code> TwinCAT XAE &amp; XAR &gt;= 4026</code>
+</p>
+<h3>Dependencies</h3>
+<p>Before adding the motion library to your project, make sure each dependency below is present at the required version. The Status column indicates where the dependency comes from and what action, if any, is needed.</p>
+<table class="wrapped">
+  <colgroup>
+    <col/>
+    <col/>
+    <col/>
+  </colgroup>
+  <tbody>
+    <tr>
+      <th scope="col">Dependency</th>
+      <th scope="col">Required Version</th>
+      <th scope="col">Status / Action</th>
+    </tr>
+    <tr>
+      <td>PMPS</td>
+      <td>3.9.0</td>
+      <td>Currently available in the library manager in 4026 prog-node</td>
+    </tr>
+    <tr>
+      <td>General</td>
+      <td>2.12.0</td>
+      <td>Currently available in the library manager in 4026 prog-node</td>
+    </tr>
+    <tr>
+      <td>Device Abstraction(user's motors)</td>
+      <td>2.0.1</td>
+      <td>Currently available in the library manager in 4026 prog-node</td>
+    </tr>
+    <tr>
+      <td>ADS-IOC</td>
+      <td>2.1.2 (latest)</td>
+      <td>Currently installed in build machines / available in prog-node 4026 under ads-deploy</td>
+    </tr>
+    <tr>
+      <td>Pytmc</td>
+      <td>2.22.0 (latest)</td>
+      <td>Currently installed in build machines / available in prog-node 4026 under ads-deploy</td>
+    </tr>
+    <tr>
+      <td>ADS-deploy</td>
+      <td>2.14.0 (latest)</td>
+      <td>Currently installed in the 4026 prog-node</td>
+    </tr>
+    <tr>
+      <td>TwinCAT Motors (typhos screens)</td>
+      <td>latest</td>
+      <td>available in the build  and control machine under dev_conda</td>
+    </tr>
+  </tbody>
+</table>
+<ac:structured-macro ac:macro-id="e29bb058-7adc-494a-8e28-94aa8357e854" ac:name="warning" ac:schema-version="1">
+  <ac:parameter ac:name="title">CC &amp; Optics Libraries Compatibility Notice</ac:parameter>
+  <ac:rich-text-body>
+    <p>Optics Library is NOT yet compatible with the new motion library upgrade and its updated public surface. Do not upgrade to the new motion library in environments that depend on Optics for now; doing so may break builds or runtime behavior until alignment is complete.</p>
+    <p>The motion SMEs are actively working to align Optics to the new motion library release. We'll follow up with an announcement once both libraries are confirmed compatible.</p>
+    <p>
+      <strong>Please hold off on upgrading to the new motion library until then.</strong>
+    </p>
+  </ac:rich-text-body>
+</ac:structured-macro>
+<h2>Configuration Parameters</h2>
+<p>The library and its dependencies expose a small number of global constants that size the data structures for your application. Set these to match your device before you build. They are defined in the libraries shown below, not in your application program.</p>
+<table class="wrapped">
+  <colgroup> <col/> <col/> <col/> </colgroup>
+  <tbody>
+    <tr>
+      <th scope="col">Parameter</th>
+      <th scope="col">Defined In</th>
+      <th scope="col">Purpose</th>
+    </tr>
+    <tr>
+      <td>MotionConstants.MAX_STATE_MOTORS</td>
+      <td>Motion library</td>
+      <td>The maximum number of motors a single state-mover device coordinates</td>
+    </tr>
+    <tr>
+      <td>GeneralConstants.MAX_STATES</td>
+      <td>General library</td>
+      <td>Maximum number of named position states per motor</td>
+    </tr>
+    <tr>
+      <td>PMPS_PARAM.MAX_FAST_FAULT</td>
+      <td>PMPS library</td>
+      <td>Maximum number of fast-fault outputs available to PMPS-integrated devices</td>
+    </tr>
+  </tbody>
+</table>
+<p>
+  <ac:emoticon ac:emoji-id="1f4a1" ac:name="light bulb"/> Tip: Set these constants once for your project. They define array sizes used throughout the library, so under-sizing them will prevent your device from configuring all of its motors, states, or fast faults.</p>
+<ac:structured-macro ac:macro-id="8b649d1e-7288-40dd-bca8-4b6a5022e74d" ac:name="warning" ac:schema-version="1">
+  <ac:parameter ac:name="title">Required Convention: GVL_Axes</ac:parameter>
+  <ac:rich-text-body>
+    <p>Every PLC application using this library <strong>must</strong> declare a global variable list named <code>GVL_Axes</code> containing an array of <code>AXIS_REF </code>named <code>Axes</code>. All NC axes are linked through elements of this array; each axis a function block uses must point to one element of <code>GVL_Axes.Axes</code>.</p>
+    <ac:structured-macro ac:macro-id="8e2eb00f-7b20-40ca-a3d3-998c0c54f34b" ac:name="code" ac:schema-version="1">
+      <ac:parameter ac:name="language">restructuredtext</ac:parameter>
+      <ac:parameter ac:name="title">GVL_Axes</ac:parameter>
+      <ac:parameter ac:name="collapse">true</ac:parameter>
+      <ac:plain-text-body><![CDATA[// MotionConstants GVL will be initialized before 'Axes' below and is set to '40500'.
+{attribute 'global_init_slot' := '40501'} 
+VAR_GLOBAL
+    Axes : ARRAY[1..MotionConstants.MAX_STATE_MOTORS] OF AXIS_REF;
+END_VAR]]></ac:plain-text-body>
+    </ac:structured-macro>
+    <p>The array bound (here <code>1..MotionConstants.MAX_STATE_MOTORS</code>) is the number of NC axes in the project; size it to your application. Each <code>FB_MotionStageNC </code>is constructed with: <code>AxisRef := GVL_Axes.Axes[n]</code>, and the matching <code>pytmc axis-link: </code>entries reference the same <code>GVL_Axes.Axes[n] </code>elements. This single, well-known location is what ties the PLC function blocks to the NC axes and to the generated EPICS records; the following examples all follow this convention.</p>
+  </ac:rich-text-body>
+</ac:structured-macro>
+<h2>Device State &amp; PMPS parameters</h2>
+<p>
+  <span style="color:var(--ds-text,#333333);">Per Motion and PMPS SME-reviewed design agreement to align with PMPS configurations and dependencies constraints, ST_PositionState holds only where the axis goes (fPosition / nEncoderCount) and the state-specific tolerances. Velocity, acceleration, deceleration, and jerk are owned solely by the drive layer (FB_MotionStageNC, exposed via MotionParamsCmd) and are not duplicated on the state-mover layer. This avoids two competing sources of truth for the same parameter. On the IOC side, the corresponding motion-parameter records are read-only: operators and clients can observe the active values but cannot write them, so the PLC remains the single authoritative source.</span>
+</p>
+<p>
+  <span style="color:var(--ds-text,#333333);">
+    <span style="color:var(--ds-text,#333333);">Set them once per stage with<span> </span>
+    </span>
+    <code>SetMotionParam(Velocity, Acceleration, Deceleration, Jerk)</code>
+    <span style="color:var(--ds-text,#333333);">
+      <span> </span>(or<span> </span>
+    </span>
+    <code>SetVelocity(Velocity)</code>
+    <span style="color:var(--ds-text,#333333);">) on first scan, as shown in<span> </span>
+    </span>
+    <strong>Example 1</strong>
+    <span style="color:var(--ds-text,#333333);">. The values are auto-saved on change and restored on boot</span>, so every state-move on that stage uses the stage's current motion parameters, regardless of which state is targeted</span>
+</p>
+<p>
+  <span style="color:var(--ds-text,#333333);">
+    <strong>State parameters are now declared, not assigned at runtime.</strong>
+    <span style="color:var(--ds-text,#333333);">
+      <span> </span>Per the PMPS-mandated requirement that state parameters be hard-coded in the application PLC, the per-state values (</span>
+    <code>fPosition</code>
+    <span style="color:var(--ds-text,#333333);">, tolerances, PMPS key) must be set in the<span> </span>
+    </span>
+    <strong>declaration block</strong>
+    <span style="color:var(--ds-text,#333333);">
+      <span> </span>of your PRG (on the<span> </span>
+    </span>
+    <code>FB_StateConfigurator</code>
+    <span style="color:var(--ds-text,#333333);">
+      <span> </span>/<span> </span>
+    </span>
+    <code>FB_PMPSStateConfigurator</code>
+    <span style="color:var(--ds-text,#333333);">
+      <span> </span>array initializer, as shown in the Example 2 and Example 3 declarations) and<span> </span>
+    </span>
+    <strong>not</strong>
+    <span style="color:var(--ds-text,#333333);">
+      <span> </span>assigned from the PRG body. The configurators are still<span> </span>
+    </span>
+    <em>called</em>
+    <span style="color:var(--ds-text,#333333);">
+      <span> </span>cyclically in the body, so online edits are re-applied, but the values they push come from the declaration: there is no<span> </span>
+    </span>
+    <code>astPositionState[i][E_State.X].fPosition := ...</code>
+    <span style="color:var(--ds-text,#333333);">
+      <span> </span>in the body anymore</span>
+  </span>
+</p>
+<h2>Sample Applications</h2>
+<p>The following worked examples show how to set up a PLC application with the library. Each example is a complete program template: declare the function blocks, link them to physical IO, enable the hardware once, then call everything cyclically. The examples assume **EL7062** drive terminals for the physical axes and show both EPICS-record generation (via <code>pytmc</code> attributes) and IO linking (via the <code>TcLinkTo</code> attribute).</p>
+<ac:structured-macro ac:macro-id="4226c0d9-9f90-40b2-a647-30d68936c4db" ac:name="info" ac:schema-version="1">
+  <ac:parameter ac:name="title">How the attributes work</ac:parameter>
+  <ac:rich-text-body>
+    <p>
+      <code>
+        <strong>pytmc,</strong>
+      </code>tells the EPICS record generator which PVs to create for the function block. <strong>pv:</strong> sets the PV prefix,<strong> io: </strong>sets the direction, <code>
+        <strong>axis-link:</strong>
+      </code> binds NC axes, and <code>
+        <strong>expand-names:</strong>
+      </code> supplies the per-element suffixes for an array. <code>
+        <strong>TcLinkTo,</strong>
+      </code>maps function-block members to physical terminal channels in the IO tree. The array index in brackets (for example, [1]) selects which element of the motion-stage array the link applies to. The examples below use three axes for readability. To scale beyond, extend the array bounds, the `axis-link` / `expand-names` lists, and the `TcLinkTo` blocks to cover indices `[1]` through `[n]`.</p>
+  </ac:rich-text-body>
+</ac:structured-macro>
+<h3>Example 1:  Simple Axis Application</h3>
+<p>The simplest application drives one or more independent axes through the drive layer (<code>
+    <strong>FB_MotionStageNC</strong>
+  </code>), with no named position states. This pattern is appropriate for a device that is just a motor: you command moves directly and read back the status.</p>
+<p>
+  <strong>Step 1:</strong> Declare the persistent storage and the motion-stage array, with IO links. The pytmc attribute generates the EPICS records; the TcLinkTo attribute links each axis to its EL7062 drive channels (forward/backward limit switches and the encoder position).</p>
+<ac:structured-macro ac:macro-id="b2ac60a6-e5a9-4196-8172-273d24cd759a" ac:name="code" ac:schema-version="1">
+  <ac:parameter ac:name="language">restructuredtext</ac:parameter>
+  <ac:parameter ac:name="title">Simple Axis App: Declaration</ac:parameter>
+  <ac:parameter ac:name="collapse">true</ac:parameter>
+  <ac:plain-text-body><![CDATA[VAR
+    // Persistent storage for axis parameters (declared once, e.g. in Main)
+    fbPersistentDataStorage : LCLS_Tc_DevAbs.FB_PersistentDataStorage;
+
+    // Generate EPICS motor records for each axis.
+    //   pv          : PV prefix; expand-names appends the per-axis suffix
+    //   io          : direction (io = input/output)
+    //   nc-optional : allow build without the NC axis present (e.g. simulation)
+    //   axis-link   : bind each array element to its NC axis
+    //   expand-names: per-element suffix -> TST:UM:MMS:01, :02, :03
+    {attribute 'pytmc' := '
+        pv: TST:UM:MMS
+        io: io
+        nc-optional: true
+        axis-link: GVL_Axes.Axes[1], GVL_Axes.Axes[2], GVL_Axes.Axes[3]
+        expand-names: 01, 02, 03
+    '}
+    // Link each axis to its EL7062 drive terminal in the IO tree.
+    // The [n] index selects the array element; each axis maps to its own drive.
+    {attribute 'TcLinkTo' := '
+        [1].fbLimSwStatus.bLimitFwd           := TIIB[DRIVE1]^DI Inputs Channel 1^Input 1;
+        [1].fbLimSwStatus.bLimitBwd           := TIIB[DRIVE1]^DI Inputs Channel 1^Input 2;
+        [1].fbEncoderScaling.nRawEncoderULINT := TIIB[DRIVE1]^FB Position Channel 1^Position;
+        [2].fbLimSwStatus.bLimitFwd           := TIIB[DRIVE2]^DI Inputs Channel 1^Input 1;
+        [2].fbLimSwStatus.bLimitBwd           := TIIB[DRIVE2]^DI Inputs Channel 1^Input 2;
+        [2].fbEncoderScaling.nRawEncoderULINT := TIIB[DRIVE2]^FB Position Channel 1^Position;
+        [3].fbLimSwStatus.bLimitFwd           := TIIB[DRIVE3]^DI Inputs Channel 1^Input 1;
+        [3].fbLimSwStatus.bLimitBwd           := TIIB[DRIVE3]^DI Inputs Channel 1^Input 2;
+        [3].fbEncoderScaling.nRawEncoderULINT := TIIB[DRIVE3]^FB Position Channel 1^Position;
+    '}
+    afbMotionStage : ARRAY[1..MotionConstants.MAX_STATE_MOTORS] OF FB_MotionStageNC[
+        (AxisRef := GVL_Axes.Axes[1], iPersistentDataStorage := fbPersistentDataStorage, sName := '01'),
+        (AxisRef := GVL_Axes.Axes[2], iPersistentDataStorage := fbPersistentDataStorage, sName := '02'),
+        (AxisRef := GVL_Axes.Axes[3], iPersistentDataStorage := fbPersistentDataStorage, sName := '03')
+    ];
+
+    bFirstScan : BOOL := TRUE;
+    i          : INT;
+END_VAR]]></ac:plain-text-body>
+</ac:structured-macro>
+<p>
+  <strong>Step 2: </strong>On the first scan, enable the hardware and set motion parameters.<code> SetModeEnableLimits</code> configures the limit/interlock behavior and energizes the axis; the drive power is gated against the stage readiness. <code>SetMotionParam</code> sets velocity/acceleration/deceleration/jerk on the drive (these are owned by the drive layer and persist across restarts).</p>
+<ac:structured-macro ac:macro-id="5b6578b6-88a3-4b85-b6b6-c5059353dade" ac:name="code" ac:schema-version="1">
+  <ac:parameter ac:name="language">restructuredtext</ac:parameter>
+  <ac:parameter ac:name="title">Simple Axis App: Body</ac:parameter>
+  <ac:parameter ac:name="collapse">true</ac:parameter>
+  <ac:plain-text-body><![CDATA[IF bFirstScan THEN
+    FOR i := 1 TO 3 DO
+        afbMotionStage[i].SetModeEnableLimits(
+            LimBackward    := TRUE,
+            LimForward     := TRUE,
+            HomeEnable     := FALSE,
+            BrakeMode      := E_StageBrakeMode.IF_ENABLED,
+            EnableMode     := E_StageEnableMode.ALWAYS,
+            HomeMode       := E_EpicsHomeCmd.LOW_LIMIT,
+            UserEnable     := TRUE,
+            HardwareEnable := TRUE);
+		// optional, typically would be overwritten by the persisted data
+        afbMotionStage[i].SetMotionParam(
+            Velocity     := 25.0,
+            Acceleration := 250.0,
+            Deceleration := 250.0,
+            Jerk         := 2500.0);
+    END_FOR
+    bFirstScan := FALSE;
+END_IF
+
+fbPersistentDataStorage();
+
+// Moves are commanded through the stage's
+// methods (for example AbsoluteMove) from EPICS or other application logic.
+FOR i := 1 TO MotionConstants.MAX_STATE_MOTORS DO
+    afbMotionStage[i]();
+END_FOR]]></ac:plain-text-body>
+</ac:structured-macro>
+<h3>Example 2: State-Mover Application (Parallel and Sequential)</h3>
+<p>A state mover coordinates several motors to <code>
+    <strong>named position states</strong>
+  </code> (for example, OUT, YAG, TT). The parallel variant (<code>FB_PositionStateND</code>) moves all motors at once; the sequential variant (<code>FB_PositionStateSequenceND</code>) moves them in a defined order. The two share the same setup; only the top-level function-block type differs.</p>
+<p>Step 1:  Declare the motors (as in Example 1), plus the state table and the state mover. The motors are wired to IO exactly as before. Two additional pieces appear: the position-state table (`astPositionState`) and a per-(motor, state) configurator array.</p>
+<ac:structured-macro ac:macro-id="e5e3f85d-cea9-42c9-bd74-e14648369eb0" ac:name="code" ac:schema-version="1">
+  <ac:parameter ac:name="language">restructuredtext</ac:parameter>
+  <ac:parameter ac:name="title">State-Mover App Parallel: Declaration</ac:parameter>
+  <ac:parameter ac:name="collapse">true</ac:parameter>
+  <ac:plain-text-body><![CDATA[VAR
+    fbPersistentDataStorage : LCLS_Tc_DevAbs.FB_PersistentDataStorage;
+
+    {attribute 'pytmc' := '
+        pv: TST:UM:MMS
+        io: io
+        nc-optional: true
+        axis-link: GVL_Axes.Axes[1], GVL_Axes.Axes[2], GVL_Axes.Axes[3]
+        expand-names: 01, 02, 03
+    '}
+    {attribute 'TcLinkTo' := '
+        [1].fbLimSwStatus.bLimitFwd           := TIIB[DRIVE1]^DI Inputs Channel 1^Input 1;
+        [1].fbLimSwStatus.bLimitBwd           := TIIB[DRIVE1]^DI Inputs Channel 1^Input 2;
+        [1].fbEncoderScaling.nRawEncoderULINT := TIIB[DRIVE1]^FB Position Channel 1^Position;
+        [2].fbLimSwStatus.bLimitFwd           := TIIB[DRIVE2]^DI Inputs Channel 1^Input 1;
+        [2].fbLimSwStatus.bLimitBwd           := TIIB[DRIVE2]^DI Inputs Channel 1^Input 2;
+        [2].fbEncoderScaling.nRawEncoderULINT := TIIB[DRIVE2]^FB Position Channel 1^Position;
+        [3].fbLimSwStatus.bLimitFwd           := TIIB[DRIVE3]^DI Inputs Channel 1^Input 1;
+        [3].fbLimSwStatus.bLimitBwd           := TIIB[DRIVE3]^DI Inputs Channel 1^Input 2;
+        [3].fbEncoderScaling.nRawEncoderULINT := TIIB[DRIVE3]^FB Position Channel 1^Position;
+    '}
+    afbMotionStage : ARRAY[1..MotionConstants.MAX_STATE_MOTORS] OF FB_MotionStageNC[
+        (AxisRef := GVL_Axes.Axes[1], iPersistentDataStorage := fbPersistentDataStorage, sName := '01'),
+        (AxisRef := GVL_Axes.Axes[2], iPersistentDataStorage := fbPersistentDataStorage, sName := '02'),
+        (AxisRef := GVL_Axes.Axes[3], iPersistentDataStorage := fbPersistentDataStorage, sName := '03')
+    ];
+
+    // Interface array: the state mover consumes motors as I_MotionStage
+    aiMotionStage : ARRAY[1..MotionConstants.MAX_STATE_MOTORS] OF I_MotionStage
+                    := [afbMotionStage[1], afbMotionStage[2], afbMotionStage[3]];
+
+    // EPICS enums: commanded state (set) and reported state (get)
+    {attribute 'pytmc' := 'pv: TST:UM:MMS:STATE:SET io: io'}
+    eEnumSet : E_AxisStates;
+    {attribute 'pytmc' := 'pv: TST:UM:MMS:STATE:GET io: i'}
+    eEnumGet : E_AxisStates;
+
+    // Position-state table: [motor][state]
+    {attribute 'pytmc' := 'pv: TST:UM:MMS:STATE io: io expand-names: 01, 02, 03'}
+    astPositionState : ARRAY[1..MotionConstants.MAX_STATE_MOTORS]
+                         OF ARRAY[1..GeneralConstants.MAX_STATES] OF ST_PositionState;
+
+    // Template applied to every state unless overridden per state.
+    // Motion parameters are NOT part of the state - they live on the drive.
+    stDefault : ST_PositionState := (fDelta := 0.5, bMoveOk := TRUE, bValid := TRUE);
+
+    // One configurator per (motor, state) pair, each bound to its own
+    afbStateConfig : ARRAY[1..MotionConstants.MAX_STATE_MOTORS * GeneralConstants.MAX_STATES] OF FB_StateConfigurator[
+        (stPositionState := astPositionState[1][E_AxisStates.OUT], stDefault := stDefault, bSetDefault := TRUE, sName := 'OUT', fPosition := 100.0),
+        (stPositionState := astPositionState[1][E_AxisStates.YAG], stDefault := stDefault, bSetDefault := TRUE, sName := 'YAG', fPosition := 200.0),
+        (stPositionState := astPositionState[1][E_AxisStates.TT],  stDefault := stDefault, bSetDefault := TRUE, sName := 'TT',  fPosition := 300.0),
+        (stPositionState := astPositionState[2][E_AxisStates.OUT], stDefault := stDefault, bSetDefault := TRUE, sName := 'OUT', fPosition := 100.0),
+        (stPositionState := astPositionState[2][E_AxisStates.YAG], stDefault := stDefault, bSetDefault := TRUE, sName := 'YAG', fPosition := 200.0),
+        (stPositionState := astPositionState[2][E_AxisStates.TT],  stDefault := stDefault, bSetDefault := TRUE, sName := 'TT',  fPosition := 300.0),
+        (stPositionState := astPositionState[3][E_AxisStates.OUT], stDefault := stDefault, bSetDefault := TRUE, sName := 'OUT', fPosition := 100.0),
+        (stPositionState := astPositionState[3][E_AxisStates.YAG], stDefault := stDefault, bSetDefault := TRUE, sName := 'YAG', fPosition := 200.0),
+        (stPositionState := astPositionState[3][E_AxisStates.TT],  stDefault := stDefault, bSetDefault := TRUE, sName := 'TT',  fPosition := 300.0)
+    ];
+
+    // PARALLEL state mover.
+    {attribute 'pytmc' := 'pv: TST:UM:MMS'}
+    fbPositionStateND : FB_PositionStateND(
+        aiMotionStage        := aiMotionStage,
+        astPositionState     := astPositionState,
+        nActiveMotorCount    := MotionConstants.MAX_STATE_MOTORS,
+        eEnumSet             := eEnumSet,
+        eEnumGet             := eEnumGet,
+        bEnableMotion        := TRUE,
+        eMotionRequestPolicy := E_MotionRequestPolicy.WAIT);
+
+    bFirstScan : BOOL := TRUE;
+    i          : INT;
+    nCfg       : INT;
+END_VAR]]></ac:plain-text-body>
+</ac:structured-macro>
+<ac:structured-macro ac:macro-id="c3ac7533-9b20-4380-96b5-4d771a69ff9c" ac:name="info" ac:schema-version="1">
+  <ac:parameter ac:name="title">Sequential variant</ac:parameter>
+  <ac:rich-text-body>
+    <p>Moving the motors in a defined order (instead of all at once) takes one extra piece: an ordering policy that implements <code>I_Sequence</code>. You declare a concrete sequence function block in your application, feed it to the mover through the <code>iSequence</code> argument, and call it cyclically in the body. The motors, IO links, state table, and configurators are otherwise identical to the parallel variant.</p>
+  </ac:rich-text-body>
+</ac:structured-macro>
+<p>
+  <strong>Step 2a (sequential only) – Provide an <code>I_Sequence</code> implementation and wire it to the mover.</strong> Declare your sequence FB and pass it via <code>iSequence</code>; everything else matches the parallel declaration</p>
+<ac:structured-macro ac:macro-id="7c2f6a37-1328-4e38-88ea-0652f1815838" ac:name="code" ac:schema-version="1">
+  <ac:parameter ac:name="language">restructuredtext</ac:parameter>
+  <ac:parameter ac:name="title">State-Mover App: Declaration (sequence only)</ac:parameter>
+  <ac:parameter ac:name="collapse">true</ac:parameter>
+  <ac:plain-text-body><![CDATA[// Your application provides a concrete sequence policy:
+//   FUNCTION_BLOCK FB_MySequence IMPLEMENTS I_Sequence
+// It decides the order in which motors are dispatched toward the target state.
+fbSequence : FB_MySequence;
+
+{attribute 'pytmc' := 'pv: TST:UM:MMS'}
+fbPositionStateND : FB_PositionStateSequenceND(
+    aiMotionStage        := aiMotionStage,
+    astPositionState     := astPositionState,
+    nActiveMotorCount    := MotionConstants.MAX_STATE_MOTORS,
+    eEnumSet             := eEnumSet,
+    eEnumGet             := eEnumGet,
+    bEnableMotion        := TRUE,
+    eMotionRequestPolicy := E_MotionRequestPolicy.WAIT,
+    iSequence            := fbSequence
+);]]></ac:plain-text-body>
+</ac:structured-macro>
+<p>In the body, call the sequence FB each cycle alongside the mover:</p>
+<ac:structured-macro ac:macro-id="306e6ace-80a2-4d8d-a106-6d9d0dc7ba28" ac:name="code" ac:schema-version="1">
+  <ac:parameter ac:name="language">restructuredtext</ac:parameter>
+  <ac:parameter ac:name="title">State-Mover App: Body (squence only)</ac:parameter>
+  <ac:parameter ac:name="collapse">true</ac:parameter>
+  <ac:plain-text-body><![CDATA[// (first-scan enable + SetMotionParam + configurator loop as in the parallel example)
+// sequential only: drive the ordering policy
+
+fbSequence();
+fbPersistentDataStorage();
+FOR i := 1 TO MotionConstants.MAX_STATE_MOTORS DO
+    afbMotionStage[i]();
+END_FOR]]></ac:plain-text-body>
+</ac:structured-macro>
+<p>
+  <strong>Step 2 (parallel): Enable hardware once, configure states every cycle, then call the mover and the motors.</strong> The configurators run cyclically so that online edits to a state are re-applied; the state mover reads the commanded enum (<code>eEnumSet</code>) and drives the motors to the matching state</p>
+<ac:structured-macro ac:macro-id="4350a19e-1463-4e1b-8d00-7cd9dda71c16" ac:name="code" ac:schema-version="1">
+  <ac:parameter ac:name="language">restructuredtext</ac:parameter>
+  <ac:parameter ac:name="title">State-Mover App: Body</ac:parameter>
+  <ac:parameter ac:name="collapse">true</ac:parameter>
+  <ac:plain-text-body><![CDATA[IF bFirstScan THEN
+    FOR i := 1 TO 3 DO
+        afbMotionStage[i].SetModeEnableLimits(
+            LimBackward    := TRUE,
+            LimForward     := TRUE,
+            HomeEnable     := FALSE,
+            BrakeMode      := E_StageBrakeMode.IF_ENABLED,
+            EnableMode     := E_StageEnableMode.ALWAYS,
+            HomeMode       := E_EpicsHomeCmd.LOW_LIMIT,
+            UserEnable     := TRUE,
+            HardwareEnable := TRUE);
+    END_FOR
+    bFirstScan := FALSE;
+END_IF
+
+// Configure all (motor, state).
+FOR nCfg := 1 TO MotionConstants.MAX_STATE_MOTORS * GeneralConstants.MAX_STATES DO
+    afbStateConfig[nCfg]();
+END_FOR
+
+// Run the state mover
+fbPositionStateND();
+
+// Call the motors cyclically.
+FOR i := 1 TO MotionConstants.MAX_STATE_MOTORS DO
+    afbMotionStage[i]();
+END_FOR]]></ac:plain-text-body>
+</ac:structured-macro>
+<h3>Example 3:  PMPS Application</h3>
+<p>A PMPS application is a state mover with beam-parameter management and machine-protection enforcement layered on top. It uses <code>FB_PositionStatePMPSND</code> (parallel) or <code>FB_PositionStateSequencePMPSND</code> (sequential) as the top-level block. The motors, IO links, and state table are set up exactly as in Example 2. Two things differ: the configurator is <code>FB_PMPSStateConfigurator</code> (it adds a <code>sPmpsState</code> key per state, used to look up beam-safety parameters in the PMPS database), and a PMPS database reader (<code>FB_Standard_PMPSDB</code>) must be present and supply its busy/error status to the mover.</p>
+<p>
+  <strong>Step 1: Use the PMPS configurator with a per-state PMPS key.</strong> This replaces the plain <code>FB_StateConfigurator</code> array from Example 2. Each entry adds <code>sPmpsState</code>, the database lookup key for that state. <strong>Declare the PMPS plumbing: fast-fault output, arbiter, the database reader, the PMPS EPICS struct, and the PMPS mover.</strong> The motor array, IO links, and state table from Example 2 are unchanged and omitted here for brevity. All PMPS controls – beam params, position limits, DB-read trigger, file-reader status, device name, and transition key are passed to the mover at instantiation</p>
+<ac:structured-macro ac:macro-id="4ce4faf9-cb18-4539-ab25-b3ceca1d31d2" ac:name="code" ac:schema-version="1">
+  <ac:parameter ac:name="language">restructuredtext</ac:parameter>
+  <ac:parameter ac:name="title">PMPS Application: Declaration</ac:parameter>
+  <ac:parameter ac:name="collapse">true</ac:parameter>
+  <ac:plain-text-body><![CDATA[VAR
+    // ... (motor array, IO links, state table, aiMotionStage, enums from Example 2) ...
+    // Configurators - FB_PMPSStateConfigurator adds sPmpsState (the DB lookup key)
+    afbStateConfig : ARRAY[1..MotionConstants.MAX_STATE_MOTORS * GeneralConstants.MAX_STATES] OF FB_PMPSStateConfigurator[
+    // Motor 1
+    (stPositionState := astPositionState[1][E_State.OUT],      stDefault := stDefault, bSetDefault := TRUE, sName := 'OUT',      sPmpsState := 'OUT',      fPosition := 100.0),
+    (stPositionState := astPositionState[1][E_State.TARGET1A], stDefault := stDefault, bSetDefault := TRUE, sName := 'TARGET1A', sPmpsState := 'TARGET1A', fPosition := 200.0),
+    (stPositionState := astPositionState[1][E_State.TARGET1B], stDefault := stDefault, bSetDefault := TRUE, sName := 'TARGET1B', sPmpsState := 'TARGET1B', fPosition := 300.0),
+    (stPositionState := astPositionState[1][E_State.TARGET1C], stDefault := stDefault, bSetDefault := TRUE, sName := 'TARGET1C', sPmpsState := 'TARGET1C', fPosition := 400.0),
+    // Motor 2
+    (stPositionState := astPositionState[2][E_State.OUT],      stDefault := stDefault, bSetDefault := TRUE, sName := 'OUT',      sPmpsState := 'OUT',      fPosition := 100.0),
+    (stPositionState := astPositionState[2][E_State.TARGET1A], stDefault := stDefault, bSetDefault := TRUE, sName := 'TARGET1A', sPmpsState := 'TARGET1A', fPosition := 200.0),
+    (stPositionState := astPositionState[2][E_State.TARGET1B], stDefault := stDefault, bSetDefault := TRUE, sName := 'TARGET1B', sPmpsState := 'TARGET1B', fPosition := 300.0),
+    (stPositionState := astPositionState[2][E_State.TARGET1C], stDefault := stDefault, bSetDefault := TRUE, sName := 'TARGET1C', sPmpsState := 'TARGET1C', fPosition := 400.0),
+    // Motor 3
+    (stPositionState := astPositionState[3][E_State.OUT],      stDefault := stDefault, bSetDefault := TRUE, sName := 'OUT',      sPmpsState := 'OUT',      fPosition := 100.0),
+    (stPositionState := astPositionState[3][E_State.TARGET1A], stDefault := stDefault, bSetDefault := TRUE, sName := 'TARGET1A', sPmpsState := 'TARGET1A', fPosition := 200.0),
+    (stPositionState := astPositionState[3][E_State.TARGET1B], stDefault := stDefault, bSetDefault := TRUE, sName := 'TARGET1B', sPmpsState := 'TARGET1B', fPosition := 300.0),
+    (stPositionState := astPositionState[3][E_State.TARGET1C], stDefault := stDefault, bSetDefault := TRUE, sName := 'TARGET1C', sPmpsState := 'TARGET1C', fPosition := 400.0),
+    // Motor 4
+    (stPositionState := astPositionState[4][E_State.OUT],      stDefault := stDefault, bSetDefault := TRUE, sName := 'OUT',      sPmpsState := 'OUT',      fPosition := 100.0),
+    (stPositionState := astPositionState[4][E_State.TARGET1A], stDefault := stDefault, bSetDefault := TRUE, sName := 'TARGET1A', sPmpsState := 'TARGET1A', fPosition := 200.0),
+    (stPositionState := astPositionState[4][E_State.TARGET1B], stDefault := stDefault, bSetDefault := TRUE, sName := 'TARGET1B', sPmpsState := 'TARGET1B', fPosition := 300.0),
+    (stPositionState := astPositionState[4][E_State.TARGET1C], stDefault := stDefault, bSetDefault := TRUE, sName := 'TARGET1C', sPmpsState := 'TARGET1C', fPosition := 400.0)
+    ];
+
+    // Hardware fast-fault output and the PMPS arbiter
+    fbFFHWO   : FB_HardwareFFOutput;
+    fbArbiter : FB_Arbiter;
+
+    // Arbiter / fast-fault IO subsystem. FB_DummyArbIO stands in for the real
+    // arbiter hardware IO; serviced each cycle with the arbiter and FFO.
+    fbSubSysIO : FB_DummyArbIO;
+
+    // PMPS database reader. Reads beam-safety parameters from the JSON DB on
+    // disk and faults through the shared fast-fault output. Often pre-declared
+    // in a GVL (MOTION_GVL.fbStandardPMPSDB); shown inline here for clarity.
+    fbStandardPMPSDB : FB_Standard_PMPSDB(
+        sPlcName   := 'plc-tst-motion',
+        sDirectory := '/home/ecs-user/pmpsdb/',
+        io_fbFFHWO := fbFFHWO);
+
+    // PMPS state mover (parallel). State-mover arguments are as in Example 2,
+    // plus the fast-fault output, arbiter, and PMPS controls. The beam-param,
+    // position-limit, DB-read, and file-reader-status arguments are all passed
+    // at instantiation.
+    {attribute 'pytmc' := 'pv: TST:UM:MMS'}
+    fbPositionStatePMPSND : FB_PositionStatePMPSND(
+        aiMotionStage         := aiMotionStage,
+        astPositionState      := astPositionState,
+        eEnumSet              := eEnumSet,
+        eEnumGet              := eEnumGet,
+        nActiveMotorCount     := MotionConstants.MAX_STATE_MOTORS,
+        bEnableMotion         := TRUE,
+        eMotionRequestPolicy  := E_MotionRequestPolicy.INTERRUPT,
+        bEnableBeamParams     := TRUE,
+        bEnablePositionLimits := TRUE,
+        bReadDBNow            := TRUE,
+        bFileReaderBusy       := MOTION_GVL.fbPmpsFileReader.bBusy,
+        bFileReaderError      := MOTION_GVL.fbPmpsFileReader.bError,
+        sDeviceName           := 'TST:PF',
+        sTransitionKey        := 'TST:PF-TRANSITION',
+        fbFFHWO               := fbFFHWO,
+        fbArbiter             := fbArbiter
+    );
+
+    bFirstScan : BOOL := TRUE;
+    i          : INT;
+    nCfg       : INT;
+END_VAR]]></ac:plain-text-body>
+</ac:structured-macro>
+<p>
+  <strong>Step 3: Body: enable hardware once, run the DB reader, configure states, then run the PMPS mover and the motors.</strong> Because the file-reader status and DB-read controls are wired at init, the cyclic mover call only needs the master enable</p>
+<ac:structured-macro ac:macro-id="985441cc-6c78-4f62-9572-1fcb4de68feb" ac:name="code" ac:schema-version="1">
+  <ac:parameter ac:name="language">restructuredtext</ac:parameter>
+  <ac:parameter ac:name="title">PMPS App: Body</ac:parameter>
+  <ac:parameter ac:name="collapse">true</ac:parameter>
+  <ac:plain-text-body><![CDATA[// (first-scan enable + SetMotionParam as in Example 2)
+
+// Configure all (motor, state) slots every cycle.
+FOR i := 1 TO MotionConstants.MAX_STATE_MOTORS * GeneralConstants.MAX_STATES DO
+    afbStateConfig[i]();
+END_FOR
+
+// Run the PMPS database reader.
+fbStandardPMPSDB(bEnable := TRUE);
+
+// Run the PMPS state mover (all controls supplied at instantiation).
+fbPositionStatePMPSND();
+
+// Service persistent storage.
+fbPersistentDataStorage();
+
+// Call the motors cyclically.
+FOR i := 1 TO MotionConstants.MAX_STATE_MOTORS DO
+    afbMotionStage[i]();
+END_FOR
+
+// Service the arbiter and fast-fault output subsystem, then execute the FFO.
+fbSubSysIO(LA := fbArbiter, FFO := fbFFHWO);
+fbFFHWO.Execute();]]></ac:plain-text-body>
+</ac:structured-macro>
+<ac:structured-macro ac:macro-id="080642d6-4fa5-4af1-85c0-ce9d92d08393" ac:name="info" ac:schema-version="1">
+  <ac:parameter ac:name="title">PMPS configuration</ac:parameter>
+  <ac:rich-text-body>
+    <p>The PMPS layer requires <code>PMPS_PARAM.MAX_FAST_FAULT</code> to be sized for the number of fast-fault outputs your device uses (see <strong>Configuration Parameters</strong> above). The <code>sPmpsState</code> key on each configurator entry is what links a state to its beam-safety parameters in the database; keys must be consistent across motors for the same state. </p>
+  </ac:rich-text-body>
+</ac:structured-macro>
+<h3>Add-on: EPS Interlocks</h3>
+<p>EPS extends each stage with three independent interlock structs: forward-enable, backward-enable, and power-enable, that bind axis motion against arbitrary equipment-side conditions. Each struct is a <code>DUT_EPS</code> The application populates from sensor/interlock signals; the stage refuses motion in the constrained direction (or refuses to power on) whenever any bit is not asserted.</p>
+<p>Wiring is two steps: declare one <code>FB_EPS</code> per axis (each gets its own forward/backward/power PVs), then call <code>AssignEPS</code> on the stage once at first scan.</p>
+<ac:structured-macro ac:macro-id="00000000-0000-0000-0000-000000000051" ac:name="code" ac:schema-version="1">
+  <ac:parameter ac:name="language">restructuredtext</ac:parameter>
+  <ac:parameter ac:name="title">EPS: Declaration and one-time wiring</ac:parameter>
+  <ac:parameter ac:name="collapse">true</ac:parameter>
+  <ac:plain-text-body><![CDATA[VAR
+    // ... afbMotionStage as in Example 1 ...
+
+    // One EPS instance per axis. PVs land under TST:UM:MMS:EPS:01:stEPSF, :stEPSB, :stEPSP, etc.
+    {attribute 'pytmc' := '
+        pv: TST:UM:MMS:EPS
+        expand-names: 01, 02, 03
+    '}
+    afbEPS : ARRAY[1..MotionConstants.MAX_STATE_MOTORS] OF FB_EPS;
+END_VAR
+
+IF bFirstScan THEN
+    FOR i := 1 TO MotionConstants.MAX_STATE_MOTORS DO
+        afbMotionStage[i].AssignEPS(iEPS := afbEPS[i]);
+    END_FOR
+    bFirstScan := FALSE;
+END_IF
+
+// Populate the interlock bits each cycle from your equipment signals. The
+// application owns what each bit means (vacuum permit, beam permit,
+// limit override, etc.); the stage just consumes them through the EPS API.
+afbEPS[1].SetBitForward(nBits := 0, bValue := bSomePlantSignal);
+afbEPS[1].SetBitBackward(nBits := 0, bValue := bSomeOtherSignal);
+afbEPS[1].SetBitPower(nBits := 0, bValue := bPowerOk);
+// ... etc per axis and per bit ...
+
+// Call the motion stages cyclically (as in Example 1).
+FOR i := 1 TO MotionConstants.MAX_STATE_MOTORS DO
+    afbMotionStage[i]();
+END_FOR]]></ac:plain-text-body>
+</ac:structured-macro>
+<h3>Add-on: Gantry Auto-Coupling</h3>
+<p>For axes that move together as a gantry (a single mechanical motion driven by two motors), the library provides <code>FB_GantryAutoCoupling</code>. It couples a master/slave pair through <code>MC_GEARIN</code> / <code>MC_GEAROUT</code>, generates per-axis gantry enables from a virtual limit switch on the encoder difference, and assigns gantry-extended EPS instances (<code>FB_GantryEPS</code>, an <code>FB_EPS</code> with the gantry bits added) to both stages.</p>
+<ac:structured-macro ac:macro-id="00000000-0000-0000-0000-000000000061" ac:name="code" ac:schema-version="1">
+  <ac:parameter ac:name="language">restructuredtext</ac:parameter>
+  <ac:parameter ac:name="title">Gantry: Declaration and cyclic call</ac:parameter>
+  <ac:parameter ac:name="collapse">true</ac:parameter>
+  <ac:plain-text-body><![CDATA[VAR
+    fbPersistentDataStorage : LCLS_Tc_DevAbs.FB_PersistentDataStorage;
+
+    // Two motion stages: master and slave. Wired to IO as in Example 1.
+    fbMaster : FB_MotionStageNC(AxisRef := GVL_Axes.Axes[1], iPersistentDataStorage := fbPersistentDataStorage, sName := 'M');
+    fbSlave  : FB_MotionStageNC(AxisRef := GVL_Axes.Axes[2], iPersistentDataStorage := fbPersistentDataStorage, sName := 'S');
+
+    // Gantry-extended EPS instances (FB_EPS + per-axis gantry status bits).
+    {attribute 'pytmc' := 'pv: TST:GAN:EPS:M'}
+    fbEPSMaster : FB_GantryEPS;
+    {attribute 'pytmc' := 'pv: TST:GAN:EPS:S'}
+    fbEPSSlave  : FB_GantryEPS;
+
+    // The coupling FB. AssignEPS on each stage is performed internally on the first scan.
+    fbGantry : FB_GantryAutoCoupling(
+        iMaster    := fbMaster,
+        iSlave     := fbSlave,
+        iEPSMaster := fbEPSMaster,
+        iEPSSlave  := fbEPSSlave
+    );
+END_VAR
+
+// Body. nGantryTol is the maximum allowable difference between master and
+// slave encoder positions (in encoder counts) before the virtual limit
+// switch trips and motion is blocked. Coupling and decoupling are handled
+// automatically against the stage enable state.
+fbGantry(nGantryTol := 100);
+
+fbMaster();
+fbSlave();
+fbPersistentDataStorage();]]></ac:plain-text-body>
+</ac:structured-macro>
+<ac:structured-macro ac:macro-id="00000000-0000-0000-0000-000000000062" ac:name="info" ac:schema-version="1">
+  <ac:parameter ac:name="title">EPS assignment on a gantry</ac:parameter>
+  <ac:rich-text-body>
+    <p>
+      <code>FB_GantryAutoCoupling</code> calls <code>AssignEPS</code> on both stages internally; do not call <code>AssignEPS</code> a second time from the application code. </p>
+  </ac:rich-text-body>
+</ac:structured-macro>
+<h3>Add-on: Backlash Compensation</h3>
+<p>Every <code>FB_MotionStageNC</code> ships with a backlash-compensation wrapper (<code>FB_BacklashCompensationNC</code>) around Beckhoff's <code>MC_BacklashCompensation</code>. The wrapper auto-tunes the position-correction filter (<code>FilterTimePosCorrPT1</code>) per move, caps the compensation against the requested move distance, and protects against toggle-spike disturbances on the position loop using a safety lattice and an operator-acknowledgement path. <strong>No application wiring is needed</strong>; compensation is enabled and tuned per axis from EPICS via the standard NC parameter PVs (<code>PositionCorrection</code>, <code>Backlash</code>, <code>FilterTimePosCorrPT1</code>).</p>
+<ac:structured-macro ac:macro-id="00000000-0000-0000-0000-0000000000b1" ac:name="warning" ac:schema-version="1">
+  <ac:parameter ac:name="title">Required NC configuration for any stage that uses position correction</ac:parameter>
+  <ac:rich-text-body>
+    <p>For every axis that requires position correction, the <strong>Position Correction</strong> flag <strong>must</strong> be enabled in the NC axis parameters (System Manager: <em>NC Axis &gt; Parameter (Init) &gt; Position Correction = TRUE</em>), and <strong>Filter Time Position Correction (P-T1)</strong> <strong>must</strong> be set to a non-zero default of approximately <code>0.5 s</code>.</p>
+    <p>
+      <br/>
+    </p>
+    <p>
+      <ac:image ac:align="center" ac:alt="NC parameter dialog: Position Correction = TRUE, Filter Time Position Correction (P-T1) = 0.5 s, Backlash = 2.0 mm">
+        <ri:attachment ri:filename="BacklashConfigs.PNG"/>
+      </ac:image>Without this, the library cannot detect or guard moves issued from the TwinCAT MotionHMI (the manual jog/move panel: <code>F1</code>-<code>F9</code>, target-position/target-velocity entries shown below), because those moves bypass the drive state machine: no <code>PrepareMove</code> runs, the per-move auto-T and <code>B≤D</code> cap are never applied, and direction reversals inject the full <code>B</code>-mm step at axis accel limits. This produces the audible/mechanical spike the wrapper is designed to prevent.</p>
+    <p>
+      <ac:image ac:height="141">
+        <ri:attachment ri:filename="TwinCATMotionHMI.PNG"/>
+      </ac:image>
+    </p>
+    <p>Set this once per axis in the NC initialisation parameters (the value persists with the project). A starting value of <code>0.5 s</code> is safe for the typical mm/s-class stages; the wrapper's per-move auto-T will adjust it upward (never below <code>T_floor = 0.1 s</code>) once a move runs through the state machine.</p>
+  </ac:rich-text-body>
+</ac:structured-macro>
+<p>Operator-facing PVs the wrapper adds to each <code>FB_MotionStageNC</code>:</p>
+<table class="wrapped">
+  <colgroup> <col/> <col/> <col/> </colgroup>
+  <tbody>
+    <tr>
+      <th scope="col">PV</th>
+      <th scope="col">Direction</th>
+      <th scope="col">Purpose</th>
+    </tr>
+    <tr>
+      <td>
+        <code>fRampRatio</code>
+      </td>
+      <td>io (persistent)</td>
+      <td>Operator trim on the Ramp velocity MC sees. Clamped on use to [0.05, 10.0] to defend against an EPICS write of 0.</td>
+    </tr>
+    <tr>
+      <td>
+        <code>bDisableBlocked</code>
+      </td>
+      <td>i</td>
+      <td>TRUE when a disable request is refused because the applied compensation is non-zero and power is on. The operator sees this on a device screen.</td>
+    </tr>
+    <tr>
+      <td>
+        <code>sDisableBlockedMessage</code>
+      </td>
+      <td>i</td>
+      <td>Human-readable reason for the refusal.</td>
+    </tr>
+  </tbody>
+</table>
+<p>Full design notes (safety lattice, NC-level lock, cyclic mirror, transition state machine, P-T1 filter headroom and ceiling, auto-T per move, B≤D cap) are in <a href="https://github.com/pcdshub/lcls-twincat-motion-abstraction/blob/master/docs/backlash-compensation.md">docs/backlash-compensation.md</a>.</p>
+<h3>Building and Deploying</h3>
+<p>Building a PLC application with the new motion library on TwinCAT 4026 does <strong>not</strong> differ from current practice. After you build the application in the TwinCAT 4026 XAE, IOC generation is driven from the menu bar: open the <strong>Tools</strong> menu and run <strong>Configure and build IOC(s)</strong>.</p>
+<ac:structured-macro ac:macro-id="780b202d-8c57-4b04-b845-0787d6812897" ac:name="info" ac:schema-version="1">
+  <ac:parameter ac:name="title">IOC generation</ac:parameter>
+  <ac:rich-text-body>
+    <p>
+      <strong>Configure and build IOC(s).</strong> This command generates the <code>iocBoot</code> folder inside the PLC application and produces the IOC boilerplate templates, intended for a final build on the Linux IOC host machine (Rocky 9 or RHEL 7).</p>
+  </ac:rich-text-body>
+</ac:structured-macro>
+<p>After running the command, the developer should inspect the generated output before the final build on the host</p>
+<ul>
+  <li class="font-claude-response-body whitespace-normal break-words pl-2" data-uuid="4244ecfc-8d26-4b57-a379-b951e6b2768f">the <code>st.cmd</code> startup template,</li>
+  <li class="font-claude-response-body whitespace-normal break-words pl-2" data-uuid="d0efa568-1766-4e7a-a26c-f312e8b16d2b">the application database, and</li>
+  <li class="font-claude-response-body whitespace-normal break-words pl-2" data-uuid="e75907ce-8c5d-4712-a224-5fd5115aa8af">the <code>Makefile</code>
+  </li>
+</ul>
+<h3>pytmc: Known Limitations</h3>
+<p>The <code>axis-link:</code> pragma binds <strong>positionally</strong>: the first entry in the list maps to the first <code>FB_MotionStageNC</code> in the array, the second entry to the second, and so on. The index values themselves do not need to be contiguous or ordered: <code>GVL_Axes.Axes[9], GVL_Axes.Axes[15], GVL_Axes.Axes[20]</code> is perfectly valid, <strong>as long as the same axes appear in the same order</strong> in both the <code>axis-link:</code> list and the <code>AxisRef</code> assignments in the array initializer.</p>
+<p>pytmc <strong>cannot</strong> verify that the <code>GVL_Axes.Axes[n]</code> assigned to a function block's <code>AxisRef</code> is the same one listed in <code>axis-link:</code> at that position. The two are independent declarations; a mismatch compiles cleanly but links the NC axis to the wrong record. <strong>It is the application developer's responsibility to keep the order consistent between the two.</strong>
+</p>
+<ac:structured-macro ac:macro-id="7abe9620-9df2-4039-8bfa-f31f4862d037" ac:name="code" ac:schema-version="1">
+  <ac:parameter ac:name="language">restructuredtext</ac:parameter>
+  <ac:parameter ac:name="title">axis-link is positional and unenforced</ac:parameter>
+  <ac:parameter ac:name="collapse">true</ac:parameter>
+  <ac:plain-text-body><![CDATA[// axis-link order: Axes[9], Axes[15], Axes[20]
+{attribute 'pytmc' := '
+    pv: TST:UM:MMS
+    io: io
+    nc-optional: true
+    axis-link: GVL_Axes.Axes[9], GVL_Axes.Axes[15], GVL_Axes.Axes[20]
+    expand-names: 01, 02, 03
+'}
+afbMotionStage : ARRAY[1..MotionConstants.MAX_STATE_MOTORS] OF FB_MotionStageNC[
+    // AxisRef order MUST match the axis-link order above, element for element:
+    (AxisRef := GVL_Axes.Axes[9],  iPersistentDataStorage := fbPersistentDataStorage, sName := 'M1'),
+    (AxisRef := GVL_Axes.Axes[15], iPersistentDataStorage := fbPersistentDataStorage, sName := 'M2'),
+    (AxisRef := GVL_Axes.Axes[20], iPersistentDataStorage := fbPersistentDataStorage, sName := 'M3')
+];]]></ac:plain-text-body>
+</ac:structured-macro>
+<h3>Supporting Documentation</h3>
+<p>A complete sample PLC application demonstrating these patterns is available on GitHub: <em> <a href="https://github.com/pcdshub/lcls-plc-motion-abstraction-sample">sample app</a> </em>. For full API details and additional documentation, see the library README: <em> <a href="https://github.com/pcdshub/lcls-twincat-motion-abstraction/blob/master/README.md">README</a> </em>
+  <em> </em>
+</p>

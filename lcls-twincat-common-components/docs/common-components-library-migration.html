@@ -1,0 +1,418 @@
+<!-- Confluence page title: Common Components Library Migration -->
+<ac:structured-macro ac:macro-id="b1c2d3e4-0001-4bbb-9000-000000000001" ac:name="info" ac:schema-version="1">
+  <ac:parameter ac:name="title">Context</ac:parameter>
+  <ac:rich-text-body>
+    <p>The common-components device FBs (<code>FB_PPM</code>, <code>FB_ATM</code>, <code>FB_WFS</code>, <code>FB_GBS</code>, <code>FB_IPM</code>, <code>FB_LIC</code>, <code>FB_REF</code>, <code>FB_XPIM</code>, <code>FB_SLITS_POWER</code>, <code>FB_SXR_SATT_Stage</code>, and now <code>FB_KBO_Coating_States</code> / <code>FB_Coating_States_NoPMPS</code>) are thin wrappers over the <strong>lcls-twincat-motion-abstraction</strong> (ND) state-mover stack. This page describes the interface and how to initialize a device in a production PRG.</p>
+  </ac:rich-text-body>
+</ac:structured-macro>
+<h2>What Changed</h2>
+<ul>
+  <li><strong>The integration PRG owns the motion primitives.</strong> Axes, persistent storage, the motion stages, the position-state slots, the fast-fault output and the arbiter are all declared in the PRG, not inside the device.</li>
+  <li><strong>Devices receive dependencies by <code>FB_Init REFERENCE TO</code>.</strong> The device forwards them into its internal <code>FB_PositionStatePMPSND</code> (or <code>FB_PositionStateND</code>) and re-forwards the enum bridge and run-time toggles each cycle. No device owns an <code>AXIS_REF</code>.</li>
+  <li><strong>Per-state config lives in the PRG</strong> via an <code>FB_CC_StatePMPSConfig</code> array (position + PMPS state key + a <code>stDefault</code> baseline), or <code>FB_CC_StatePMPSEncConfig</code> for raw-counts devices (see below). The device layers its own per-state name/<code>fDelta</code> defaults on top.</li>
+  <li><strong>Non-state motors moved to the integrator.</strong> Legacy X/Z/Zoom/Focus axes are no longer owned by the device; declare and wire them in the PRG.</li>
+  <li><strong>State movers carry no motion parameters.</strong> <code>ST_PositionState</code> has no <code>fVelocity</code>/<code>fAccel</code>/<code>fDecel</code> fields. Set them once per stage with <code>SetMotionParam</code>/<code>SetVelocity</code> on the motor; every state-move on that stage uses whatever is currently set, regardless of target state (see the Notes section for the one case that needs more than this).</li>
+</ul>
+<h2>Ownership Contract</h2>
+<table class="wrapped">
+  <colgroup> <col/> <col/> </colgroup>
+  <tbody>
+    <tr>
+      <th scope="col">Concern</th>
+      <th scope="col">Owner</th>
+    </tr>
+    <tr>
+      <td><code>AXIS_REF</code>, <code>FB_MotionStageNC</code>, <code>FB_PersistentDataStorage</code></td>
+      <td>PRG</td>
+    </tr>
+    <tr>
+      <td><code>aiMotionStage</code>, <code>astPositionState</code></td>
+      <td>PRG</td>
+    </tr>
+    <tr>
+      <td><code>FB_HardwareFFOutput</code>, <code>FB_Arbiter</code>, file-reader status</td>
+      <td>PRG</td>
+    </tr>
+    <tr>
+      <td>Per-state <code>fPosition</code> / PMPS key (<code>FB_CC_StatePMPSConfig</code>)</td>
+      <td>PRG</td>
+    </tr>
+    <tr>
+      <td>Per-state <code>nEncoderCount</code> for raw-counts devices (<code>FB_CC_StatePMPSEncConfig</code>) &#8212; <code>fPosition</code> is <em>not</em> set here, it's recomputed from <code>nEncoderCount</code></td>
+      <td>PRG</td>
+    </tr>
+    <tr>
+      <td>Per-state <code>sName</code> / <code>fDelta</code> defaults</td>
+      <td>device FB</td>
+    </tr>
+    <tr>
+      <td>State-mover, PMPS gating, beam-param lookup</td>
+      <td>device FB (via <code>fbStates</code>)</td>
+    </tr>
+  </tbody>
+</table>
+<h2>Production Init: Single-Axis Device (<code>FB_PPM</code>)</h2>
+<ac:structured-macro ac:macro-id="b1c2d3e4-0002-4bbb-9000-000000000002" ac:name="code" ac:schema-version="1">
+  <ac:parameter ac:name="language">restructuredtext</ac:parameter>
+  <ac:parameter ac:name="title">PRG_xxL0_PPM: Declaration</ac:parameter>
+  <ac:parameter ac:name="collapse">true</ac:parameter>
+  <ac:plain-text-body><![CDATA[PROGRAM PRG_xxL0_PPM
+VAR
+    // --- caller-owned motion primitives ---
+    axRef : AXIS_REF;                                // linked to the NC axis in the project
+    fbPDS : LCLS_Tc_DevAbs.FB_PersistentDataStorage;
+
+    {attribute 'pytmc' := '
+        pv: TST:PPM
+        io: io
+        axis-link: GVL_Axes.Axes[1]
+        expand-names: Y
+    '}
+    fbMotorY : FB_MotionStageNC(AxisRef := axRef, iPersistentDataStorage := fbPDS, sName := 'Y');
+
+    aiMotionStage : ARRAY[1..MotionConstants.MAX_STATE_MOTORS] OF I_MotionStage := [fbMotorY];
+
+    {attribute 'pytmc' := '
+        pv: TST:PPM
+        io: i
+        array: 1..1 | 1..4
+        expand-names: Y
+    '}
+    astPositionState : ARRAY[1..MotionConstants.MAX_STATE_MOTORS]
+                         OF ARRAY[1..GeneralConstants.MAX_STATES] OF ST_PositionState;
+
+    // --- PMPS / fast-fault plumbing ---
+    fbFFHWO   : FB_HardwareFFOutput;
+    fbArbiter : FB_Arbiter(1);
+
+    // --- per-state config (position + PMPS key) ---
+    stDefault : ST_PositionState := (bMoveOk := TRUE, bValid := TRUE, bUseRawCounts := FALSE);
+    afbStatePMPS : ARRAY[1..4] OF FB_CC_StatePMPSConfig[
+        (stPositionState := astPositionState[1][E_PPM_States.OUT],        stDefault := stDefault, fPosition := 10.0, sPmpsState := 'XPP:PPM-OUT'),
+        (stPositionState := astPositionState[1][E_PPM_States.POWERMETER], stDefault := stDefault, fPosition := 20.0, sPmpsState := 'XPP:PPM-POWERMETER'),
+        (stPositionState := astPositionState[1][E_PPM_States.YAG1],       stDefault := stDefault, fPosition := 30.0, sPmpsState := 'XPP:PPM-YAG1'),
+        (stPositionState := astPositionState[1][E_PPM_States.YAG2],       stDefault := stDefault, fPosition := 40.0, sPmpsState := 'XPP:PPM-YAG2')
+    ];
+
+    // --- the device (deps injected via FB_Init; pv base is install-specific) ---
+    {attribute 'pytmc' := 'pv: XPP:PPM'}
+    fbPPM : FB_PPM(
+        aiMotionStage         := aiMotionStage,
+        astPositionState      := astPositionState,
+        fbFFHWO               := fbFFHWO,
+        fbArbiter             := fbArbiter,
+        sDeviceName           := 'XPP:PPM',
+        sTransitionKey        := 'XPP:PPM-TRANSITION',
+        bEnableBeamParams     := TRUE,
+        bEnablePositionLimits := TRUE,
+        bReadDBNow            := TRUE,
+        bFileReaderBusy       := MOTION_GVL.fbPmpsFileReader.bBusy,
+        bFileReaderError      := MOTION_GVL.fbPmpsFileReader.bError
+    );
+
+    i          : UINT;
+    bFirstScan : BOOL := TRUE;
+END_VAR]]></ac:plain-text-body>
+</ac:structured-macro>
+<ac:structured-macro ac:macro-id="b1c2d3e4-0003-4bbb-9000-000000000003" ac:name="code" ac:schema-version="1">
+  <ac:parameter ac:name="language">restructuredtext</ac:parameter>
+  <ac:parameter ac:name="title">PRG_xxL0_PPM: Body</ac:parameter>
+  <ac:parameter ac:name="collapse">true</ac:parameter>
+  <ac:plain-text-body><![CDATA[// --- cyclic body: order matters ---
+IF bFirstScan THEN
+    fbMotorY.SetModeEnableLimits(
+        LimBackward := TRUE, LimForward := TRUE, HomeEnable := FALSE,
+        BrakeMode := E_StageBrakeMode.IF_ENABLED, EnableMode := E_StageEnableMode.DURING_MOTION,
+        HomeMode := E_EpicsHomeCmd.LOW_LIMIT, UserEnable := TRUE, HardwareEnable := TRUE);
+    fbMotorY.SetVelocity(Velocity := 15.5);
+    bFirstScan := FALSE;
+END_IF
+
+// 1) tick per-state config BEFORE the device
+FOR i := 1 TO 4 DO
+    afbStatePMPS[i]();
+END_FOR
+
+// 2) tick the device (drives fbStates + sub-devices)
+fbPPM();
+
+// 3) tick the motion primitives the device references
+fbPDS();
+fbMotorY();
+
+// 4) service the arbiter / fast-fault output last
+fbArbiter( ... );
+fbFFHWO.Execute();]]></ac:plain-text-body>
+</ac:structured-macro>
+<h2>Power Slits (<code>FB_SLITS_POWER</code>)</h2>
+<p>Blade-aperture device, not a state mover: four blade motors indexed by <code>E_SlitsBlade</code>, eight RTDs and a flow switch. <code>M_UpdatePMPS(index)</code> runs each cycle to snap the requested gap into the PMPS envelope; <code>index</code> is the device's slot in the aperture table. The <code>fApertureMargin</code> FB_Init input (mm, default <code>0.01</code>) is the amount trimmed off the authorized width/height when snapping the request into compliance. Terminal links for the RTDs sit in the instance <code>TcLinkTo</code> pragma.</p>
+<ac:structured-macro ac:macro-id="b1c2d3e4-0004-4bbb-9000-000000000004" ac:name="code" ac:schema-version="1">
+  <ac:parameter ac:name="language">restructuredtext</ac:parameter>
+  <ac:parameter ac:name="title">PRG_SL1L0_POWER: Declaration</ac:parameter>
+  <ac:parameter ac:name="collapse">true</ac:parameter>
+  <ac:plain-text-body><![CDATA[PROGRAM PRG_SL1L0_POWER
+VAR
+    axRef : ARRAY[1..4] OF AXIS_REF;                 // indexed by E_SlitsBlade
+    fbPDS : LCLS_Tc_DevAbs.FB_PersistentDataStorage;
+    {attribute 'pytmc' := '
+        pv: SL1L0:POWER
+        io: io
+        array: 1..4
+        axis-link: GVL_Axes.Axes[1], GVL_Axes.Axes[2], GVL_Axes.Axes[3], GVL_Axes.Axes[4]
+        expand-names: Top, Bottom, North, South
+    '}
+    afbBlade : ARRAY[1..4] OF FB_MotionStageNC[
+        (AxisRef := axRef[E_SlitsBlade.TOP],    iPersistentDataStorage := fbPDS, sName := 'Top'),
+        (AxisRef := axRef[E_SlitsBlade.BOTTOM], iPersistentDataStorage := fbPDS, sName := 'Bottom'),
+        (AxisRef := axRef[E_SlitsBlade.NORTH],  iPersistentDataStorage := fbPDS, sName := 'North'),
+        (AxisRef := axRef[E_SlitsBlade.SOUTH],  iPersistentDataStorage := fbPDS, sName := 'South')
+    ];
+    aiMotionStage : ARRAY[1..4] OF I_MotionStage := [
+        afbBlade[E_SlitsBlade.TOP],   afbBlade[E_SlitsBlade.BOTTOM],
+        afbBlade[E_SlitsBlade.NORTH], afbBlade[E_SlitsBlade.SOUTH]
+    ];
+
+    fbFFHWO : FB_HardwareFFOutput;
+
+    // Device pv base + RTD terminal links live on the instance pragmas.
+    {attribute 'pytmc' := '
+        pv: SL1L0:POWER
+        io: io
+    '}
+    {attribute 'TcLinkTo' := '.RTD_TOP_1.iRaw := TIIB[SL1L0-EL3202-E10]^RTD Inputs Channel 1^Value;
+                              (* ... remaining 7 RTD channels ... *)'}
+    fbSlits : FB_SLITS_POWER(
+        aiMotionStage     := aiMotionStage,
+        fbFFHWO           := fbFFHWO,
+        sDeviceName       := 'SL1L0:POWER',
+        sPmpsState        := 'SL1L0:POWER-RTD',
+        bFileReaderBusy   := MOTION_GVL.fbPmpsFileReader.bBusy,
+        fApertureMargin   := 0.01
+    );
+
+    i : UINT;
+END_VAR]]></ac:plain-text-body>
+</ac:structured-macro>
+<ac:structured-macro ac:macro-id="b1c2d3e4-0005-4bbb-9000-000000000005" ac:name="code" ac:schema-version="1">
+  <ac:parameter ac:name="language">restructuredtext</ac:parameter>
+  <ac:parameter ac:name="title">PRG_SL1L0_POWER: Body</ac:parameter>
+  <ac:parameter ac:name="collapse">true</ac:parameter>
+  <ac:plain-text-body><![CDATA[FOR i := 1 TO 4 DO
+    afbBlade[i]();               // parent ticks the blade motors (composition)
+END_FOR
+fbPDS();
+
+fbSlits.M_UpdatePMPS(index := GVL.nSlitsApertureIndex);  // integrator-driven, valid index
+fbSlits(bMoveOk := TRUE);        // aperture math + RTDs + flow switch
+
+fbFFHWO.Execute();]]></ac:plain-text-body>
+</ac:structured-macro>
+<h2>Solid Attenuator (<code>FB_SXR_SATT_Stage</code>)</h2>
+<p>Single-axis filter-stack mover (states <code>OUT</code> + <code>FILTER1..8</code>) built on <code>FB_PositionStateND</code>, not a PMPS state mover. It uses <code>FB_CC_StateDefaultsConfig</code> (position + name, no PMPS key) for the states and pulls only an RTD reactive-temp setpoint from the DB via <code>RTDPMPSState</code>. Per-filter material/thickness is written into the device's <code>arrFilters</code> table by an <code>FB_SATT_FilterConfig</code> array. Beam energy <code>PMPS_GVL.stCurrentBeamParameters.neV</code> feeds the transmission calc; keep it non-zero to avoid a divide-by-zero in the physics library.</p>
+<ac:structured-macro ac:macro-id="b1c2d3e4-0006-4bbb-9000-000000000006" ac:name="code" ac:schema-version="1">
+  <ac:parameter ac:name="language">restructuredtext</ac:parameter>
+  <ac:parameter ac:name="title">PRG_AT1K4_SATT: Declaration</ac:parameter>
+  <ac:parameter ac:name="collapse">true</ac:parameter>
+  <ac:plain-text-body><![CDATA[PROGRAM PRG_AT1K4_SATT
+VAR
+    axRef : AXIS_REF;
+    fbPDS : LCLS_Tc_DevAbs.FB_PersistentDataStorage;
+
+    {attribute 'pytmc' := 'pv: MMS'}
+    fbMotorY : FB_MotionStageNC(AxisRef := axRef, iPersistentDataStorage := fbPDS, sName := 'Y');
+    aiMotionStage : ARRAY[1..MotionConstants.MAX_STATE_MOTORS] OF I_MotionStage := [fbMotorY];
+
+    {attribute 'pytmc' := '
+        pv: TST:D1:STATE
+        io: i
+        array: 1..1 | 1..9
+        expand-names: D1M1, D1M2, D1M3, D1M4
+    '}
+    astPositionState : ARRAY[1..MotionConstants.MAX_STATE_MOTORS]
+                         OF ARRAY[1..GeneralConstants.MAX_STATES] OF ST_PositionState;
+
+    fbFFHWO : FB_HardwareFFOutput;
+
+    {attribute 'pytmc' := 'pv: AT1K4:L2SI'}
+    fbSATT : FB_SXR_SATT_Stage(
+        aiMotionStage    := aiMotionStage,
+        astPositionState := astPositionState,
+        fbFFHWO          := fbFFHWO,
+        bFileReaderBusy  := MOTION_GVL.fbPmpsFileReader.bBusy,
+        sDeviceName      := 'AT1K4:L2SI',
+        RTDPMPSState     := 'AT1K4:L2SI-RTD'
+    );
+
+    // State positions/names (no PMPS key for SATT).
+    stDefault : ST_PositionState := (fDelta := 0.2, bMoveOk := TRUE, bValid := TRUE, bUseRawCounts := FALSE);
+    afbStateCfg : ARRAY[1..9] OF FB_CC_StateDefaultsConfig[
+        (stPositionState := astPositionState[1][E_SXR_SATT_Position.OUT],     stDefault := stDefault, sName := 'Out',     fPosition := 10),
+        (stPositionState := astPositionState[1][E_SXR_SATT_Position.FILTER1], stDefault := stDefault, sName := 'Filter1', fPosition := 20)
+        // ... FILTER2..FILTER8
+    ];
+
+    // Per-filter material + thickness written into fbSATT.arrFilters.
+    afbFilterCfg : ARRAY[1..8] OF FB_SATT_FilterConfig[
+        (stFilter := fbSATT.arrFilters[1], sFilterMaterial := 'C',  fFilterThickness_um := 25),
+        (stFilter := fbSATT.arrFilters[2], sFilterMaterial := 'Si', fFilterThickness_um := 200)
+        // ... filters 3..8
+    ];
+
+    i : UINT;
+END_VAR]]></ac:plain-text-body>
+</ac:structured-macro>
+<ac:structured-macro ac:macro-id="b1c2d3e4-0007-4bbb-9000-000000000007" ac:name="code" ac:schema-version="1">
+  <ac:parameter ac:name="language">restructuredtext</ac:parameter>
+  <ac:parameter ac:name="title">PRG_AT1K4_SATT: Body</ac:parameter>
+  <ac:parameter ac:name="collapse">true</ac:parameter>
+  <ac:plain-text-body><![CDATA[FOR i := 1 TO 9 DO
+    afbStateCfg[i]();
+END_FOR
+FOR i := 1 TO 8 DO
+    afbFilterCfg[i]();
+END_FOR
+
+PMPS_GVL.stCurrentBeamParameters.neV := 250.0;   // guard the transmission calc
+
+fbSATT();          // fbStates + transmission calc + RTDs
+fbPDS();
+fbMotorY();
+fbFFHWO.Execute();
+
+// Command a filter:  fbSATT.eEnumSet := E_SXR_SATT_Position.FILTER3;]]></ac:plain-text-body>
+</ac:structured-macro>
+<h2>Coating Selector, PMPS + Raw Counts (<code>FB_KBO_Coating_States</code>)</h2>
+<p>Single-axis, 2-state mirror coating selector (<code>Si</code>/<code>B4C</code>) built on <code>FB_PositionStatePMPSND</code>. Unlike <code>FB_PPM</code> above, its states are raw encoder counts, not scaled positions: Si and B4C are different physical encoder targets, so the per-state config uses <code>FB_CC_StatePMPSEncConfig</code> (not <code>FB_CC_StatePMPSConfig</code>) to supply a distinct <code>nEncoderCount</code> per state.</p>
+<ac:structured-macro ac:macro-id="b1c2d3e4-0008-4bbb-9000-000000000008" ac:name="code" ac:schema-version="1">
+  <ac:parameter ac:name="language">restructuredtext</ac:parameter>
+  <ac:parameter ac:name="title">PRG_MR2K4_KBO: Declaration</ac:parameter>
+  <ac:parameter ac:name="collapse">true</ac:parameter>
+  <ac:plain-text-body><![CDATA[PROGRAM PRG_MR2K4_KBO
+VAR
+    axRef : AXIS_REF;
+    fbPDS : LCLS_Tc_DevAbs.FB_PersistentDataStorage;
+
+    {attribute 'pytmc' := 'pv: MR2K4:KBO'}
+    fbMotorY : FB_MotionStageNC(AxisRef := axRef, iPersistentDataStorage := fbPDS, sName := 'Y');
+    aiMotionStage : ARRAY[1..MotionConstants.MAX_STATE_MOTORS] OF I_MotionStage := [fbMotorY];
+
+    {attribute 'pytmc' := '
+        pv: MR2K4:KBO
+        array: 1..1 | 1..2
+    '}
+    astPositionState : ARRAY[1..MotionConstants.MAX_STATE_MOTORS]
+                         OF ARRAY[1..GeneralConstants.MAX_STATES] OF ST_PositionState;
+
+    fbFFHWO   : FB_HardwareFFOutput;
+    fbArbiter : FB_Arbiter(1);
+
+    // bUseRawCounts:=TRUE - nEncoderCount is this mirror's real per-state
+    // target, not fPosition. FB_PositionStateInternalND recomputes fPosition
+    // from nEncoderCount via the axis's NC scaling every cycle.
+    stDefault : ST_PositionState := (bMoveOk := TRUE, bValid := TRUE, bUseRawCounts := TRUE);
+    afbStatePMPS : ARRAY[1..2] OF FB_CC_StatePMPSEncConfig[
+        (stPositionState := astPositionState[1][E_KBO_CoatingStates.Si],  stDefault := stDefault, nEncoderCount := 8701960, sPmpsState := 'MR2K4:KBO-SILICON'),
+        (stPositionState := astPositionState[1][E_KBO_CoatingStates.B4C], stDefault := stDefault, nEncoderCount := 6636177, sPmpsState := 'MR2K4:KBO-B4C')
+    ];
+
+    {attribute 'pytmc' := 'pv: MR2K4:KBO'}
+    fbKBO : FB_KBO_Coating_States(
+        aiMotionStage         := aiMotionStage,
+        astPositionState      := astPositionState,
+        fbFFHWO               := fbFFHWO,
+        fbArbiter             := fbArbiter,
+        sDeviceName           := 'MR2K4:KBO',
+        sTransitionKey        := 'MR2K4:KBO-TRANSITION',
+        bEnableBeamParams     := TRUE,
+        bEnablePositionLimits := TRUE,
+        bReadDBNow            := TRUE,
+        bFileReaderBusy       := MOTION_GVL.fbPmpsFileReader.bBusy,
+        bFileReaderError      := MOTION_GVL.fbPmpsFileReader.bError
+    );
+
+    i          : UINT;
+    bFirstScan : BOOL := TRUE;
+END_VAR]]></ac:plain-text-body>
+</ac:structured-macro>
+<ac:structured-macro ac:macro-id="b1c2d3e4-0009-4bbb-9000-000000000009" ac:name="code" ac:schema-version="1">
+  <ac:parameter ac:name="language">restructuredtext</ac:parameter>
+  <ac:parameter ac:name="title">PRG_MR2K4_KBO: Body</ac:parameter>
+  <ac:parameter ac:name="collapse">true</ac:parameter>
+  <ac:plain-text-body><![CDATA[IF bFirstScan THEN
+    fbMotorY.SetModeEnableLimits(
+        LimBackward := TRUE, LimForward := TRUE, HomeEnable := FALSE,
+        BrakeMode := E_StageBrakeMode.IF_ENABLED, EnableMode := E_StageEnableMode.DURING_MOTION,
+        HomeMode := E_EpicsHomeCmd.LOW_LIMIT, UserEnable := TRUE, HardwareEnable := TRUE);
+    // Motion dynamics are the integrator's call - set them here, or rely on
+    // the NC axis's own configured defaults. FB_KBO_Coating_States applies none.
+    fbMotorY.SetVelocity(Velocity := 0.150);
+    bFirstScan := FALSE;
+END_IF
+
+FOR i := 1 TO 2 DO
+    afbStatePMPS[i]();
+END_FOR
+
+fbKBO();
+fbPDS();
+fbMotorY();
+
+fbArbiter( ... );
+fbFFHWO.Execute();
+
+// Command a coating:  fbKBO.eEnumSet := E_KBO_CoatingStates.B4C;]]></ac:plain-text-body>
+</ac:structured-macro>
+<h2>Coating Selector, No PMPS (<code>FB_Coating_States_NoPMPS</code>)</h2>
+<p>Simpler 2-state coating selector with no beam-safety gating, built on <code>FB_PositionStateND</code> directly. All per-state config, including <code>sName</code>, is integrator-owned via <code>FB_CC_StateDefaultsConfig</code> &#8212; the device FB owns nothing.</p>
+<ac:structured-macro ac:macro-id="b1c2d3e4-000a-4bbb-9000-00000000000a" ac:name="code" ac:schema-version="1">
+  <ac:parameter ac:name="language">restructuredtext</ac:parameter>
+  <ac:parameter ac:name="title">PRG_xxx_Coating: Declaration + Body</ac:parameter>
+  <ac:parameter ac:name="collapse">true</ac:parameter>
+  <ac:plain-text-body><![CDATA[PROGRAM PRG_xxx_Coating
+VAR
+    axRef : AXIS_REF;
+    fbPDS : LCLS_Tc_DevAbs.FB_PersistentDataStorage;
+
+    {attribute 'pytmc' := 'pv: TST:COAT'}
+    fbMotorY : FB_MotionStageNC(AxisRef := axRef, iPersistentDataStorage := fbPDS, sName := 'Y');
+    aiMotionStage : ARRAY[1..MotionConstants.MAX_STATE_MOTORS] OF I_MotionStage := [fbMotorY];
+
+    astPositionState : ARRAY[1..MotionConstants.MAX_STATE_MOTORS]
+                         OF ARRAY[1..GeneralConstants.MAX_STATES] OF ST_PositionState;
+
+    stDefault : ST_PositionState := (fDelta := 0.2, bMoveOk := TRUE, bValid := TRUE, bUseRawCounts := FALSE);
+    afbStateCfg : ARRAY[1..2] OF FB_CC_StateDefaultsConfig[
+        (stPositionState := astPositionState[1][E_Coating_States.Coating1], stDefault := stDefault, sName := 'Coating1', fPosition := 10.0),
+        (stPositionState := astPositionState[1][E_Coating_States.Coating2], stDefault := stDefault, sName := 'Coating2', fPosition := 20.0)
+    ];
+
+    {attribute 'pytmc' := 'pv: TST:COAT'}
+    fbCoating : FB_Coating_States_NoPMPS(
+        aiMotionStage    := aiMotionStage,
+        astPositionState := astPositionState
+    );
+
+    i : UINT;
+END_VAR
+
+// --- cyclic body ---
+FOR i := 1 TO 2 DO
+    afbStateCfg[i]();
+END_FOR
+
+fbCoating();
+fbPDS();
+fbMotorY();
+
+// Command a coating:  fbCoating.eEnumSet := E_Coating_States.Coating2;]]></ac:plain-text-body>
+</ac:structured-macro>
+<h2>Notes</h2>
+<ul>
+  <li><strong>Config-before-device.</strong> Tick the <code>FB_CC_StatePMPSConfig</code> / <code>FB_CC_StatePMPSEncConfig</code> / <code>FB_CC_StateDefaultsConfig</code> array before the device each cycle; the device's per-state defaults overwrite the baseline <code>FB_StateSetup</code> just laid down.</li>
+  <li><strong>Multi-motor state movers</strong> size the <code>aiMotionStage</code> array to the active motor count and set <code>nActiveMotorCount</code> accordingly (see the motion-abstraction <code>PRG_PMPS</code> test program for a 4-axis example).</li>
+  <li><strong>Multi-stage devices with a single state stage.</strong> Several devices carry more than one physical stage while only one drives the internal state mover. <code>FB_ATM</code>, for example, has an X alignment motor alongside the Y state stage; <code>FB_IPM</code>, <code>FB_WFS</code> and <code>FB_XPIM</code> likewise pair their state stage with aux X / Z / Zoom / Focus stages. Wire only the state stage into <code>aiMotionStage</code> (slot 1, <code>nActiveMotorCount := 1</code>) and give it the <code>astPositionState</code> row. Each auxiliary stage is a plain caller-owned <code>FB_MotionStageNC</code> that the PRG (or test harness) declares, configures and ticks on its own every cycle; it never appears in <code>aiMotionStage</code> or <code>astPositionState</code>. The device sizes <code>aiMotionStage</code> to <code>MotionConstants.MAX_STATE_MOTORS</code> to match <code>FB_Init</code>'s fixed-size signature, so the unused slots stay nil and are never touched.</li>
+  <li><strong>Commanding moves:</strong> write <code>fbPPM.eEnumSet := E_PPM_States.YAG1;</code> and read back <code>fbPPM.eEnumGet</code>.</li>
+  <li><strong>Raw-counts devices don't get <code>fPosition</code> from the integrator.</strong> <code>FB_PositionStateInternalND</code> recomputes it every cycle from <code>nEncoderCount</code> via the axis's live NC scaling factor. Writing <code>fPosition</code> alongside <code>nEncoderCount</code> on a <code>bUseRawCounts := TRUE</code> state gets silently overwritten next scan &#8212; don't do it.</li>
+  <li><strong>Speed that varies by destination state has no framework support.</strong> The deprecated <code>FB_TM1K4_States</code> used a different speed for OUT than for any TARGET, selected automatically off the old state struct. Nothing in the ND framework reproduces this; a device that genuinely needs it has to watch the commanded goal and call <code>SetMotionParam</code> conditionally on every goal change, not once at init.</li>
+  <li><strong>No runtime-configurable state count.</strong> Every device here hardcodes its own state count and enum (1 to 16 states across the library) and gets cloned for a new device, rather than one FB flexing at runtime. Dropping to a generic <code>UINT</code> selector would lose the EPICS mbbi/mbbo dropdown (<code>ZRST</code>/<code>ONST</code>&#8230;) that operator screens rely on.</li>
+</ul>

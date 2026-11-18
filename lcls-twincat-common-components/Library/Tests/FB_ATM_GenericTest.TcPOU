@@ -31,6 +31,11 @@ VAR
     sTransitionKey : STRING := 'TST:ATMG-TRANSITION';
     bFileReaderBusy  : BOOL;
     bFileReaderError : BOOL;
+    (* File-reader status of the default-count instance. It stays FALSE, so
+       the busy flag never falls and the instance never reads the PMPS DB, which
+       has no entry for TST:ATMG6. *)
+    bFileReaderBusySix  : BOOL;
+    bFileReaderErrorSix : BOOL;
 
     // Caller-owned state bridge of the nine-state instance.
     eEnumSet : E_ATMGenericTestStates;
@@ -74,8 +79,8 @@ VAR
         bEnableBeamParams     := FALSE,
         bEnablePositionLimits := FALSE,
         bReadDBNow            := FALSE,
-        bFileReaderBusy       := bFileReaderBusy,
-        bFileReaderError      := bFileReaderError,
+        bFileReaderBusy       := bFileReaderBusySix,
+        bFileReaderError      := bFileReaderErrorSix,
         eEnumSetRef           := eEnumSetSix,
         eEnumGetRef           := eEnumGetSix,
         nStateCount           := 0,

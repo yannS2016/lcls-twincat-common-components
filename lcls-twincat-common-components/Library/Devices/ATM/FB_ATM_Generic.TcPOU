@@ -18,8 +18,10 @@ FUNCTION_BLOCK FB_ATM_Generic EXTENDS FB_ATM_Core
       <ST><![CDATA[SUPER^();]]></ST>
     </Implementation>
     <Method Name="FB_Init" Id="{20b33c50-fddb-4871-8582-356e49b45ef0}">
-      <Declaration><![CDATA[(* Forwards the eleven core arguments to FB_ATM_Core, then binds the state
-   bridge, the state count and the state names. *)
+      <Declaration><![CDATA[(* Declares the eleven FB_ATM_Core arguments again, as TwinCAT requires for a
+   derived FB_Init; the runtime runs FB_ATM_Core.FB_Init with them first and
+   this method is not allowed to call it. Binds the state bridge, the state
+   count and the state names. *)
 {attribute 'analysis' := '-33'}
 METHOD FB_Init : BOOL
 VAR_INPUT
@@ -43,23 +45,7 @@ VAR_INPUT
     asStateName            : REFERENCE TO ARRAY[1..GeneralConstants.MAX_STATES] OF STRING;
 END_VAR]]></Declaration>
       <Implementation>
-        <ST><![CDATA[SUPER^.FB_Init(
-    bInitRetains          := bInitRetains,
-    bInCopyCode           := bInCopyCode,
-    aiMotionStage         := aiMotionStage,
-    astPositionState      := astPositionState,
-    fbFFHWO               := fbFFHWO,
-    fbArbiter             := fbArbiter,
-    sDeviceName           := sDeviceName,
-    sTransitionKey        := sTransitionKey,
-    bEnableBeamParams     := bEnableBeamParams,
-    bEnablePositionLimits := bEnablePositionLimits,
-    bReadDBNow            := bReadDBNow,
-    bFileReaderBusy       := bFileReaderBusy,
-    bFileReaderError      := bFileReaderError
-);
-
-THIS^.eEnumSetRef REF= eEnumSetRef;
+        <ST><![CDATA[THIS^.eEnumSetRef REF= eEnumSetRef;
 THIS^.eEnumGetRef REF= eEnumGetRef;
 THIS^.asStateName REF= asStateName;
 THIS^.nStateCount := nStateCount;]]></ST>

@@ -62,6 +62,32 @@ VAR_INPUT
     '}
     rEncoderOffsetSouth : REAL;
 END_VAR
+VAR_OUTPUT
+    {attribute 'pytmc' := '
+    pv: ACTUAL_XWIDTH
+    io: io
+    '}
+    rActApertureSizeX : REAL;
+    {attribute 'pytmc' := '
+    pv: ACTUAL_YWIDTH
+    io: io
+    '}
+    rActApertureSizeY : REAL;
+    {attribute 'pytmc' := '
+    pv: ACTUAL_XCENTER
+    io: io
+    '}
+    rActCenterX : REAL;
+    {attribute 'pytmc' := '
+    pv: ACTUAL_YCENTER
+    io: io
+    '}
+    rActCenterY : REAL;
+
+    // Set when an X or Y move was dispatched this cycle.
+    bExecuteMotionX : BOOL;
+    bExecuteMotionY : BOOL;
+END_VAR
 VAR CONSTANT
     (* Position-compare deltas for the blade ST_PositionState. *)
     fSmallDelta : LREAL := 0.01;
@@ -132,26 +158,6 @@ VAR
     '}
     rReqCenterY : REAL;
 
-    {attribute 'pytmc' := '
-    pv: ACTUAL_XWIDTH
-    io: io
-    '}
-    rActApertureSizeX : REAL;
-    {attribute 'pytmc' := '
-    pv: ACTUAL_YWIDTH
-    io: io
-    '}
-    rActApertureSizeY : REAL;
-    {attribute 'pytmc' := '
-    pv: ACTUAL_XCENTER
-    io: io
-    '}
-    rActCenterX : REAL;
-    {attribute 'pytmc' := '
-    pv: ACTUAL_YCENTER
-    io: io
-    '}
-    rActCenterY : REAL;
 
     (* Edge-trigger request flags. Cleared on the rising edge each
        cycle but no preset move is dispatched (stub: legacy parity). *)
@@ -189,8 +195,6 @@ VAR
     rOldReqCenterX       : REAL;
     rOldReqCenterY       : REAL;
 
-    bExecuteMotionX : BOOL;
-    bExecuteMotionY : BOOL;
 
     fbLogger : FB_LogMessage := (eSubsystem := E_SubSystem.MOTION);
 

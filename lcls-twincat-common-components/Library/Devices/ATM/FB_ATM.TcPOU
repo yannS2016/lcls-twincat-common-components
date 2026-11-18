@@ -2,13 +2,13 @@
 <TcPlcObject Version="1.1.0.1">
   <POU Name="FB_ATM" Id="{2f5a266c-a319-48e1-b797-55a7489c8358}" SpecialFunc="None">
     <Declaration><![CDATA[(* Arrival Time Monitor with the library state enum E_ATM_States (OUT,
-   TARGET1..TARGET5): FB_ATM_Generic with the enum bridge owned here. The
+   TARGET1..TARGET5): FB_ATM_Core with the enum bridge owned here. The
    MMS:STATE:SET and MMS:STATE:GET PVs and the state names are the same as
-   before. A device with a different state list uses FB_ATM_Generic directly
+   before. A device with a different state list uses FB_ATM_Generic
    with its own enum. FB_Init is inherited, so the caller injects the same
-   references as for FB_ATM_Generic and leaves the bridge arguments out. *)
+   references as for FB_ATM_Core and leaves the bridge arguments out. *)
 {attribute 'call_after_init'}
-FUNCTION_BLOCK FB_ATM EXTENDS FB_ATM_Generic
+FUNCTION_BLOCK FB_ATM EXTENDS FB_ATM_Core
 VAR
     (* Device-specific state-enum bridge. Typed as E_ATM_States (UINT
        base); CallAfterInit binds it to the base's REFERENCE TO UINT

@@ -1,0 +1,233 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <POU Name="FB_ATM_Core" Id="{0b07f9bb-47d7-44ec-ac70-db2931ab90d6}" SpecialFunc="None">
+    <Declaration><![CDATA[(* Arrival Time Monitor core: thin ND-framework state-mover wrapper that holds
+   no enum type of its own. FB_Init takes the same eleven arguments as the
+   legacy FB_ATM. The state bridge, state count and state names are fields that
+   a derived type binds before it calls CallAfterInit: FB_ATM_Generic takes them
+   through its own FB_Init, FB_ATM binds its E_ATM_States variables. Y mover via FB_PositionStatePMPSND over one motor,
+   plus a tick site for the in-beam thermocouple and flow meter.
+
+   The state bridge is caller-owned. The integrator declares its own enum
+   (UINT base, OUT = 1, then the targets) with the MMS:STATE:SET and
+   MMS:STATE:GET pytmc pragmas on its own variables, so the EPICS state menu
+   comes from that enum, and hands the two variables over as REFERENCE TO UINT. State 1 is OUT, which vetoes the thermocouple.
+   nStateCount counts OUT plus the targets (0 means 6, limited to
+   2..GeneralConstants.MAX_STATES). asStateName optionally names each state;
+   a nil array or a blank entry falls back to OUT and TARGET1, TARGET2, ...
+   FB_ATM wraps this FB with E_ATM_States for the library-standard ATM, and
+   FB_ATM_Generic wraps it with caller-owned bridge variables.
+
+   Caller-owned dependencies are injected through FB_Init as REFERENCE TO and
+   forwarded to fbStates in CallAfterInit. The per-state sName and fDelta are
+   written once there. *)
+{attribute 'call_after_init'}
+FUNCTION_BLOCK FB_ATM_Core
+VAR
+    {attribute 'pytmc' := 'pv: STC:01'}
+    fbTempSensor1 : FB_CC_TempSensor;
+
+    {attribute 'pytmc' := 'pv: FWM'}
+    fbFlowMeter : FB_AnalogInput := (iTermBits := 15, fTermMax := 60, fTermMin := 0);
+
+    (* REFERENCE TO backing fields populated by FB_Init. Same names as
+       FB_Init params; THIS^. disambiguates inside FB_Init.
+       Live-bound to caller storage for the lifetime of the FB. *)
+    {attribute 'no_copy'}
+    aiMotionStage         : REFERENCE TO ARRAY[1..MotionConstants.MAX_STATE_MOTORS] OF I_MotionStage;
+    {attribute 'no_copy'}
+    astPositionState      : REFERENCE TO ARRAY[1..MotionConstants.MAX_STATE_MOTORS]
+                                            OF ARRAY[1..GeneralConstants.MAX_STATES] OF ST_PositionState;
+    {attribute 'no_copy'}
+    fbFFHWO               : REFERENCE TO FB_HardwareFFOutput;
+    {attribute 'no_copy'}
+    fbArbiter             : REFERENCE TO FB_Arbiter;
+    sDeviceName           : STRING;
+    sTransitionKey        : STRING;
+    bEnableMotion         : BOOL := TRUE;
+    bEnableBeamParams     : BOOL;
+    bEnablePositionLimits : BOOL;
+    bReadDBNow            : BOOL;
+    bFileReaderBusy       : REFERENCE TO BOOL;
+    bFileReaderError      : REFERENCE TO BOOL;
+
+    (* Caller-owned state bridge. eEnumSetRef receives move requests and
+       eEnumGetRef reports the current state. Both are UINT views of the
+       integrator's enum variables. *)
+    {attribute 'no_copy'}
+    eEnumSetRef           : REFERENCE TO UINT;
+    {attribute 'no_copy'}
+    eEnumGetRef           : REFERENCE TO UINT;
+    // Number of states in use, OUT included. 0 selects 6; limited in CallAfterInit.
+    nStateCount           : UINT;
+    // Optional per-state names, index 1 is OUT. Blank entries use the defaults.
+    {attribute 'no_copy'}
+    asStateName           : REFERENCE TO ARRAY[1..GeneralConstants.MAX_STATES] OF STRING;
+
+    {attribute 'pytmc' := 'pv: MMS'}
+    fbStates : FB_PositionStatePMPSND(
+        aiMotionStage         := aiMotionStage,
+        astPositionState      := astPositionState,
+        nActiveMotorCount     := 1,
+        eEnumSet              := eEnumSetRef,
+        eEnumGet              := eEnumGetRef,
+        bEnableMotion         := bEnableMotion,
+        eMotionRequestPolicy  := E_MotionRequestPolicy.INTERRUPT,
+        bEnableBeamParams     := bEnableBeamParams,
+        bEnablePositionLimits := bEnablePositionLimits,
+        bReadDBNow            := bReadDBNow,
+        bFileReaderBusy       := bFileReaderBusy,
+        bFileReaderError      := bFileReaderError,
+        fbFFHWO               := fbFFHWO,
+        fbArbiter             := fbArbiter,
+        sDeviceName           := sDeviceName,
+        sTransitionKey        := sTransitionKey
+    );
+END_VAR
+VAR_OUTPUT
+    // The PMPS database lookup associated with the current position state.
+    stDbStateParams: ST_DbStateParams;
+END_VAR
+VAR CONSTANT
+    (* ATM-wide default tolerance for state in-position detection,
+       written per state in CallAfterInit. *)
+    FDELTA_DEFAULT : LREAL := 2;
+    // State value of OUT in every ATM enum.
+    nOutState : UINT := 1;
+    // State count used when nStateCount is 0.
+    nDefaultStateCount : UINT := 6;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT __ISVALIDREF(aiMotionStage)
+   OR NOT __ISVALIDREF(astPositionState)
+   OR NOT __ISVALIDREF(fbFFHWO)
+   OR NOT __ISVALIDREF(fbArbiter)
+   OR NOT __ISVALIDREF(eEnumSetRef)
+   OR NOT __ISVALIDREF(eEnumGetRef) THEN
+    RETURN;
+END_IF
+
+fbStates(stDbStateParams=> stDbStateParams);
+
+(* In-beam thermocouple: only faults when something is actually in the
+   beam (i.e. not OUT). Driven by the PMPS DB temp setpoint. *)
+fbTempSensor1(
+    fFaultThreshold := fbStates.stDbStateParams.stReactiveParams.nTempSP,
+    bVeto           := eEnumGetRef = nOutState,
+    sDevName        := sDeviceName,
+    io_fbFFHWO      := fbFFHWO
+);
+
+fbFlowMeter();]]></ST>
+    </Implementation>
+    <Method Name="CallAfterInit" Id="{a97fcae5-1420-4268-8023-befe115b659f}">
+      <Declaration><![CDATA[(* Auto-fired after FB_Init. Writes the per-state sName and fDelta once, then
+   re-supplies the now-valid refs to fbStates through
+   CallAfterInitStateMover / CallAfterInitPMPS, because fbStates' inline-init
+   ran first and forwarded nil refs. Does nothing while the essential refs
+   are still nil. *)
+{attribute 'call_after_init'}
+METHOD CallAfterInit
+VAR
+    nState     : UINT;
+    sStateName : STRING;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF nStateCount = 0 THEN
+    nStateCount := nDefaultStateCount;
+END_IF
+IF nStateCount < 2 THEN
+    nStateCount := 2;
+END_IF
+IF nStateCount > TO_UINT(GeneralConstants.MAX_STATES) THEN
+    nStateCount := TO_UINT(GeneralConstants.MAX_STATES);
+END_IF
+
+IF NOT __ISVALIDREF(aiMotionStage)
+   OR NOT __ISVALIDREF(astPositionState)
+   OR NOT __ISVALIDREF(eEnumSetRef)
+   OR NOT __ISVALIDREF(eEnumGetRef) THEN
+    RETURN;
+END_IF
+
+FOR nState := 1 TO nStateCount DO
+    IF nState = nOutState THEN
+        sStateName := 'OUT';
+    ELSE
+        sStateName := CONCAT('TARGET', UINT_TO_STRING(nState - 1));
+    END_IF
+    IF __ISVALIDREF(asStateName) THEN
+        IF LEN(asStateName[nState]) > 0 THEN
+            sStateName := asStateName[nState];
+        END_IF
+    END_IF
+    astPositionState[1][nState].sName  := sStateName;
+    astPositionState[1][nState].fDelta := FDELTA_DEFAULT;
+END_FOR
+
+THIS^.fbStates.CallAfterInitStateMover(
+    aiMotionStage         := aiMotionStage,
+    astPositionState      := astPositionState,
+    nActiveMotorCount     := 1,
+    eEnumSet              := eEnumSetRef,
+    eEnumGet              := eEnumGetRef,
+    bEnableMotion         := bEnableMotion,
+    eMotionRequestPolicy  := E_MotionRequestPolicy.INTERRUPT,
+);
+
+THIS^.fbStates.CallAfterInitPMPS(
+    aiMotionStage         := aiMotionStage,
+    astPositionState      := astPositionState,
+    bEnableBeamParams     := bEnableBeamParams,
+    bEnablePositionLimits := bEnablePositionLimits,
+    bReadDBNow            := bReadDBNow,
+    bFileReaderBusy       := bFileReaderBusy,
+    bFileReaderError      := bFileReaderError,
+    fbFFHWO               := fbFFHWO,
+    fbArbiter             := fbArbiter,
+    sDeviceName           := sDeviceName,
+    sTransitionKey        := sTransitionKey
+);
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="FB_Init" Id="{7eff5e72-784e-45c9-8b75-c8d832df35eb}">
+      <Declaration><![CDATA[(* Stores FB_Init inputs into instance fields; every non-value input is
+   REFERENCE TO, REF= bound for the FB lifetime. fbStates inline-init
+   captured these params at construction, so this records the same refs
+   on THIS^ for body use and live caller writes. *)
+{attribute 'analysis' := '-33'}
+METHOD FB_Init : BOOL
+VAR_INPUT
+    bInitRetains           : BOOL;
+    bInCopyCode            : BOOL;
+    aiMotionStage          : REFERENCE TO ARRAY[1..MotionConstants.MAX_STATE_MOTORS] OF I_MotionStage;
+    astPositionState       : REFERENCE TO ARRAY[1..MotionConstants.MAX_STATE_MOTORS]
+                                            OF ARRAY[1..GeneralConstants.MAX_STATES] OF ST_PositionState;
+    fbFFHWO                : REFERENCE TO FB_HardwareFFOutput;
+    fbArbiter              : REFERENCE TO FB_Arbiter;
+    sDeviceName            : STRING;
+    sTransitionKey         : STRING;
+    bEnableBeamParams      : BOOL;
+    bEnablePositionLimits  : BOOL;
+    bReadDBNow             : BOOL;
+    bFileReaderBusy        : REFERENCE TO BOOL;
+    bFileReaderError       : REFERENCE TO BOOL;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[THIS^.aiMotionStage    REF= aiMotionStage;
+THIS^.astPositionState REF= astPositionState;
+THIS^.fbFFHWO          REF= fbFFHWO;
+THIS^.fbArbiter        REF= fbArbiter;
+THIS^.sDeviceName      := sDeviceName;
+THIS^.sTransitionKey   := sTransitionKey;
+THIS^.bEnableBeamParams     := bEnableBeamParams;
+THIS^.bEnablePositionLimits := bEnablePositionLimits;
+THIS^.bReadDBNow            := bReadDBNow;
+THIS^.bFileReaderBusy       REF= bFileReaderBusy;
+THIS^.bFileReaderError      REF= bFileReaderError;]]></ST>
+      </Implementation>
+    </Method>
+  </POU>
+</TcPlcObject>

@@ -61,6 +61,9 @@ VAR
         asStateName           := asStateName
     );
 
+    // All blank, so every state of the default-count instance uses its default name.
+    asStateNameSix : ARRAY[1..GeneralConstants.MAX_STATES] OF STRING;
+
     fbATMSix : FB_ATM_Generic(
         aiMotionStage         := aiMotionStage,
         astPositionState      := astPositionStateSix,
@@ -75,7 +78,8 @@ VAR
         bFileReaderError      := bFileReaderError,
         eEnumSetRef           := eEnumSetSix,
         eEnumGetRef           := eEnumGetSix,
-        nStateCount           := 0
+        nStateCount           := 0,
+        asStateName           := asStateNameSix
     );
 
     stDefault : ST_PositionState := (

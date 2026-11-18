@@ -17,6 +17,13 @@ VAR_INPUT
     (* TRUE only once the bridge is confirmed bad, not while an unconfirmed
        zero reading is still inside the debounce window. Gates the FFO trip. *)
     bBridgeConfirmedBad : BOOL;
+    {attribute 'pytmc' := '
+    pv: MODE
+    field: ZNAM Local
+    field: ONAM PMPS
+    io: io
+    '}
+    xPMPSMode : BOOL := TRUE;
 END_VAR
 VAR
     (* PMPS aperture IO (caller-mapped to terminals). *)
@@ -36,13 +43,6 @@ VAR
     bOverAperture : BOOL;
     rBadXOK       : R_TRIG;
 
-    {attribute 'pytmc' := '
-    pv: MODE
-    field: ZNAM Local
-    field: ONAM PMPS
-    io: io
-    '}
-    xPMPSMode : BOOL := TRUE;
     (* Margin (mm) subtracted from the authorized width/height when snapping
        the request into PMPS compliance. Set via FB_Init, defaults to 0.01. *)
     fApertureMargin : REAL := 0.01;

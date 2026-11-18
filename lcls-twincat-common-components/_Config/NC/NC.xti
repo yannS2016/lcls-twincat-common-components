@@ -31,5 +31,7 @@
 		<Axis File="SLIT_Top.xti" Id="8"/>
 		<Axis File="KBO_Y.xti" Id="14"/>
 		<Axis File="COATING_Y.xti" Id="15"/>
+		<Axis File="ATMG_Y.xti" Id="16"/>
+		<Axis File="ATMG6_Y.xti" Id="17"/>
 	</NC>
 </TcSmItem>

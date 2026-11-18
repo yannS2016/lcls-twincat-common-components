@@ -47,6 +47,7 @@ VAR
     fbJsonHelper_XPIM  : FB_PMPSJsonTestHelper;
     fbJsonHelper_SATT  : FB_PMPSJsonTestHelper;
     fbJsonHelper_SLITS : FB_PMPSJsonTestHelper;
+    fbJsonHelper_SLITST : FB_PMPSJsonTestHelper;
     fbJsonHelper_KBO   : FB_PMPSJsonTestHelper;
 
     (* astParams_XXX[0] is the transition key; the rest are named-state
@@ -65,6 +66,8 @@ VAR
     astParams_XPIM  : ARRAY[0..5] OF ST_DbStateParams;
     astParams_SATT  : ARRAY[0..0] OF ST_DbStateParams;
     astParams_SLITS : ARRAY[0..0] OF ST_DbStateParams;
+    // Own device of FB_SLITS_THERMALTest, so it does not share SL1L0:POWER.
+    astParams_SLITST : ARRAY[0..0] OF ST_DbStateParams;
     (* [0]=transition, [1]=Si, [2]=B4C *)
     astParams_KBO   : ARRAY[0..2] OF ST_DbStateParams;
 END_VAR
@@ -730,6 +733,16 @@ astParams_SLITS[0].stBeamParams.nRate        := 10;
 astParams_SLITS[0].stBeamParams.nTran        := 12;
 astParams_SLITS[0].stBeamParams.nMachineMode := 2;
 
+(* ---- SL1L0:THERMAL ---- *)
+astParams_SLITST[0].sPmpsState                := 'SL1L0:THERMAL-RTD';
+astParams_SLITST[0].nRequestAssertionID       := 1210;
+astParams_SLITST[0].stReactiveParams.nTempSP  := 30;
+astParams_SLITST[0].stBeamParams.nBeamClass   := 2#0000_0001;
+astParams_SLITST[0].stBeamParams.neVRange     := 2#1111_1111_1111_1111_1111_1111_1111_1111;
+astParams_SLITST[0].stBeamParams.nRate        := 10;
+astParams_SLITST[0].stBeamParams.nTran        := 12;
+astParams_SLITST[0].stBeamParams.nMachineMode := 2;
+
 (* ---- TST:KBO ---- [0]=transition, [1]=Si, [2]=B4C *)
 astParams_KBO[0].sPmpsState                  := 'TST:KBO-TRANSITION';
 astParams_KBO[0].nRequestAssertionID         := 1300;
@@ -826,6 +839,12 @@ fbJsonHelper_SLITS(
     astBeamParams := astParams_SLITS,
     bExecute      := TRUE,
     sDevName      := 'SL1L0:POWER',
+    bNewDoc       := FALSE);
+
+fbJsonHelper_SLITST(
+    astBeamParams := astParams_SLITST,
+    bExecute      := TRUE,
+    sDevName      := 'SL1L0:THERMAL',
     bNewDoc       := FALSE);
 
 fbJsonHelper_KBO(

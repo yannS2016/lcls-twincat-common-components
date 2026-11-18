@@ -35,8 +35,8 @@ VAR
     fbSlitsThermal : FB_SLITS_THERMAL(
         aiMotionStage   := aiMotionStage,
         fbFFHWO         := fbFFHWO,
-        sDeviceName     := 'SL1L0:POWER',
-        sPmpsState      := 'SL1L0:POWER-RTD',
+        sDeviceName     := 'SL1L0:THERMAL',
+        sPmpsState      := 'SL1L0:THERMAL-RTD',
         bFileReaderBusy := bSimFileReaderBusy
     );
 

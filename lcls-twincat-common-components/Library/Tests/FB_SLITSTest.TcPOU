@@ -111,20 +111,20 @@ METHOD TestUnlimitedGap
       <Implementation>
         <ST><![CDATA[TEST('TestSlitsUnlimitedGap');
 
-fbSlits.bExecuteMotionX := FALSE;
-fbSlits.bExecuteMotionY := FALSE;
+fbSlits.ExecuteMotionX := FALSE;
+fbSlits.ExecuteMotionY := FALSE;
 fbSlits.SetApertureRequest(ApertureSizeX := 1000.0, ApertureSizeY := 800.0, CenterX := 0.0, CenterY := 0.0);
 fbSlits.M_CalculatePositions();
 
-AssertTrue(fbSlits.bExecuteMotionX, 'large X gap request dispatches X motion');
-AssertTrue(fbSlits.bExecuteMotionY, 'large Y gap request dispatches Y motion');
+AssertTrue(fbSlits.ExecuteMotionX, 'large X gap request dispatches X motion');
+AssertTrue(fbSlits.ExecuteMotionY, 'large Y gap request dispatches Y motion');
 AssertTrue(fbSlits.rOldReqApertureSizeX = 1000.0, 'large X gap request latched');
 AssertTrue(fbSlits.rOldReqApertureSizeY = 800.0, 'large Y gap request latched');
 AssertTrue(fbSlits.fPosNorthBlade = 500.0 AND fbSlits.fPosSouthBlade = -500.0, 'X blade targets from the requested gap');
 AssertTrue(fbSlits.fPosTopBlade = 400.0 AND fbSlits.fPosBottomBlade = -400.0, 'Y blade targets from the requested gap');
 
-fbSlits.bExecuteMotionX := FALSE;
-fbSlits.bExecuteMotionY := FALSE;
+fbSlits.ExecuteMotionX := FALSE;
+fbSlits.ExecuteMotionY := FALSE;
 TEST_FINISHED();
 ]]></ST>
       </Implementation>

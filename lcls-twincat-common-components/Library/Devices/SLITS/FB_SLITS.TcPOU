@@ -83,10 +83,6 @@ VAR_OUTPUT
     io: io
     '}
     rActCenterY : REAL;
-
-    // Set when an X or Y move was dispatched this cycle.
-    bExecuteMotionX : BOOL;
-    bExecuteMotionY : BOOL;
 END_VAR
 VAR CONSTANT
     (* Position-compare deltas for the blade ST_PositionState. *)
@@ -100,6 +96,11 @@ VAR CONSTANT
     // fJerk         : LREAL := 0.0;
 END_VAR
 VAR
+    // Set when an X or Y move was dispatched this cycle. Read and cleared
+    // through ExecuteMotionX and ExecuteMotionY.
+    bExecuteMotionX : BOOL;
+    bExecuteMotionY : BOOL;
+
     (* Per-blade scratch ST_PositionState. Static fields seeded here;
        fPosition and bMoveOk are refreshed each cycle in the body. *)
     stTop    : ST_PositionState := (sName := 'Top',    bValid := TRUE, bUseRawCounts := FALSE, fDelta := fSmallDelta);
@@ -499,5 +500,45 @@ rReqCenterY       := CenterY;
 ]]></ST>
       </Implementation>
     </Method>
+    <Property Name="ExecuteMotionX" Id="{703122b2-8000-4680-898b-c49b95a6bafb}">
+      <Declaration><![CDATA[(* TRUE when a X move was dispatched and not yet consumed by M_Motion. *)
+PROPERTY ExecuteMotionX : BOOL]]></Declaration>
+      <Get Name="Get" Id="{ae6b853c-5f7c-4ab6-b72e-c8580982709e}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[ExecuteMotionX := bExecuteMotionX;]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{28545f93-e59a-4cbf-bf00-29572024a6cd}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[bExecuteMotionX := ExecuteMotionX;]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="ExecuteMotionY" Id="{deb16891-ef96-4536-a032-ca2c8403fa4d}">
+      <Declaration><![CDATA[(* TRUE when a Y move was dispatched and not yet consumed by M_Motion. *)
+PROPERTY ExecuteMotionY : BOOL]]></Declaration>
+      <Get Name="Get" Id="{a90a8f10-3966-4fab-8ed2-1d372b85e0f5}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[ExecuteMotionY := bExecuteMotionY;]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{e231be8e-a045-47cc-9a72-5c6c3841a134}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[bExecuteMotionY := ExecuteMotionY;]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
   </POU>
 </TcPlcObject>

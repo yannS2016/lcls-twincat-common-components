@@ -31,11 +31,6 @@ VAR
     sTransitionKey : STRING := 'TST:ATMG-TRANSITION';
     bFileReaderBusy  : BOOL;
     bFileReaderError : BOOL;
-    (* File-reader status of the default-count instance. It stays FALSE, so
-       the busy flag never falls and the instance never reads the PMPS DB, which
-       has no entry for TST:ATMG6. *)
-    bFileReaderBusySix  : BOOL;
-    bFileReaderErrorSix : BOOL;
 
     // Caller-owned state bridge of the nine-state instance.
     eEnumSet : E_ATMGenericTestStates;
@@ -79,8 +74,8 @@ VAR
         bEnableBeamParams     := FALSE,
         bEnablePositionLimits := FALSE,
         bReadDBNow            := FALSE,
-        bFileReaderBusy       := bFileReaderBusySix,
-        bFileReaderError      := bFileReaderErrorSix,
+        bFileReaderBusy       := bFileReaderBusy,
+        bFileReaderError      := bFileReaderError,
         eEnumSetRef           := eEnumSetSix,
         eEnumGetRef           := eEnumGetSix,
         nStateCount           := 0,
@@ -130,6 +125,34 @@ VAR
          stDefault       := stDefault,
          fPosition       := 90,
          sPmpsState      := 'TST:ATMG-TARGET8')
+    ];
+
+    // Keys of the default-count instance, which has its own DB device TST:ATMG6.
+    afbStatePMPSSix : ARRAY[1..6] OF FB_CC_StatePMPSConfig[
+        (stPositionState := astPositionStateSix[1][E_ATMGenericTestStates.OUT],
+         stDefault       := stDefault,
+         fPosition       := 10,
+         sPmpsState      := 'TST:ATMG6-OUT'),
+        (stPositionState := astPositionStateSix[1][E_ATMGenericTestStates.TARGET1],
+         stDefault       := stDefault,
+         fPosition       := 20,
+         sPmpsState      := 'TST:ATMG6-TARGET1'),
+        (stPositionState := astPositionStateSix[1][E_ATMGenericTestStates.TARGET2],
+         stDefault       := stDefault,
+         fPosition       := 30,
+         sPmpsState      := 'TST:ATMG6-TARGET2'),
+        (stPositionState := astPositionStateSix[1][E_ATMGenericTestStates.TARGET3],
+         stDefault       := stDefault,
+         fPosition       := 40,
+         sPmpsState      := 'TST:ATMG6-TARGET3'),
+        (stPositionState := astPositionStateSix[1][E_ATMGenericTestStates.TARGET4],
+         stDefault       := stDefault,
+         fPosition       := 50,
+         sPmpsState      := 'TST:ATMG6-TARGET4'),
+        (stPositionState := astPositionStateSix[1][E_ATMGenericTestStates.TARGET5],
+         stDefault       := stDefault,
+         fPosition       := 60,
+         sPmpsState      := 'TST:ATMG6-TARGET5')
     ];
 
     bFirstScan : BOOL := TRUE;

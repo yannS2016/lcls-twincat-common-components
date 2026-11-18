@@ -18,10 +18,10 @@ FUNCTION_BLOCK FB_ATM_Generic EXTENDS FB_ATM_Core
       <ST><![CDATA[SUPER^();]]></ST>
     </Implementation>
     <Method Name="FB_Init" Id="{20b33c50-fddb-4871-8582-356e49b45ef0}">
-      <Declaration><![CDATA[(* Declares the eleven FB_ATM_Core arguments again, as TwinCAT requires for a
-   derived FB_Init; the runtime runs FB_ATM_Core.FB_Init with them first and
-   this method is not allowed to call it. Binds the state bridge, the state
-   count and the state names. *)
+      <Declaration><![CDATA[(* Repeats the eleven FB_ATM_Core arguments, as a derived FB_Init must, and adds
+   the state bridge, the state count and the state names. The body assigns only
+   the added arguments, to the fields FB_ATM_Core declares for them, the same
+   way FB_MotionStageNC.FB_Init feeds FB_MotionStageCommon. *)
 {attribute 'analysis' := '-33'}
 METHOD FB_Init : BOOL
 VAR_INPUT
@@ -45,10 +45,10 @@ VAR_INPUT
     asStateName            : REFERENCE TO ARRAY[1..GeneralConstants.MAX_STATES] OF STRING;
 END_VAR]]></Declaration>
       <Implementation>
-        <ST><![CDATA[THIS^.eEnumSetRef REF= eEnumSetRef;
-THIS^.eEnumGetRef REF= eEnumGetRef;
-THIS^.asStateName REF= asStateName;
-THIS^.nStateCount := nStateCount;]]></ST>
+        <ST><![CDATA[SUPER^.eEnumSetRef REF= eEnumSetRef;
+SUPER^.eEnumGetRef REF= eEnumGetRef;
+SUPER^.asStateName REF= asStateName;
+SUPER^.nStateCount := nStateCount;]]></ST>
       </Implementation>
     </Method>
   </POU>

@@ -127,8 +127,8 @@ VAR
          sPmpsState      := 'TST:ATMG-TARGET8')
     ];
 
-    // Keys of the default-count instance, which has its own DB device TST:ATMG6.
-    afbStatePMPSSix : ARRAY[1..6] OF FB_CC_StatePMPSConfig[
+    // Keys of all nine states of the default-count instance, which has its own DB device TST:ATMG6.
+    afbStatePMPSSix : ARRAY[1..9] OF FB_CC_StatePMPSConfig[
         (stPositionState := astPositionStateSix[1][E_ATMGenericTestStates.OUT],
          stDefault       := stDefault,
          fPosition       := 10,
@@ -152,7 +152,19 @@ VAR
         (stPositionState := astPositionStateSix[1][E_ATMGenericTestStates.TARGET5],
          stDefault       := stDefault,
          fPosition       := 60,
-         sPmpsState      := 'TST:ATMG6-TARGET5')
+         sPmpsState      := 'TST:ATMG6-TARGET5'),
+        (stPositionState := astPositionStateSix[1][E_ATMGenericTestStates.TARGET6],
+         stDefault       := stDefault,
+         fPosition       := 70,
+         sPmpsState      := 'TST:ATMG6-TARGET6'),
+        (stPositionState := astPositionStateSix[1][E_ATMGenericTestStates.TARGET7],
+         stDefault       := stDefault,
+         fPosition       := 80,
+         sPmpsState      := 'TST:ATMG6-TARGET7'),
+        (stPositionState := astPositionStateSix[1][E_ATMGenericTestStates.TARGET8],
+         stDefault       := stDefault,
+         fPosition       := 90,
+         sPmpsState      := 'TST:ATMG6-TARGET8')
     ];
 
     bFirstScan : BOOL := TRUE;

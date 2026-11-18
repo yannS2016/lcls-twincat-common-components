@@ -500,6 +500,26 @@ rReqCenterY       := CenterY;
 ]]></ST>
       </Implementation>
     </Method>
+    <Method Name="SetActualAperture" Id="{8c1932a8-5257-408a-9d5a-55fd95d3da8a}">
+      <Declaration><![CDATA[(* Test seam: overwrite the measured aperture (gap and center) that the body
+   normally derives from the blade positions. The values are outputs, so
+   tests that call M_CheckPMPS or M_UpdatePMPS directly set them here. *)
+METHOD INTERNAL SetActualAperture
+VAR_INPUT
+    ApertureSizeX : REAL;
+    ApertureSizeY : REAL;
+    CenterX       : REAL;
+    CenterY       : REAL;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[rActApertureSizeX := ApertureSizeX;
+rActApertureSizeY := ApertureSizeY;
+rActCenterX       := CenterX;
+rActCenterY       := CenterY;
+]]></ST>
+      </Implementation>
+    </Method>
     <Property Name="ExecuteMotionX" Id="{703122b2-8000-4680-898b-c49b95a6bafb}">
       <Declaration><![CDATA[(* TRUE when a X move was dispatched and not yet consumed by M_Motion. *)
 PROPERTY ExecuteMotionX : BOOL]]></Declaration>

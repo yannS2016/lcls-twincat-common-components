@@ -55,8 +55,7 @@ END_VAR
       <Implementation>
         <ST><![CDATA[PMPS_GVL.stCurrentBeamParameters.astApertures[2].Width  := fPmpsW;
 PMPS_GVL.stCurrentBeamParameters.astApertures[2].Height := fPmpsH;
-fbSlits.rActApertureSizeX := fActX;
-fbSlits.rActApertureSizeY := fActY;
+fbSlits.SetActualAperture(ApertureSizeX := fActX, ApertureSizeY := fActY, CenterX := 0.0, CenterY := 0.0);
 fbSlits.M_CheckPMPS(2);
 AssertTrue(fbSlits.FFO.i_xOK = bExpectOk, sMessage);
 ]]></ST>

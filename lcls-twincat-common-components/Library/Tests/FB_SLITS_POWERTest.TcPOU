@@ -264,10 +264,7 @@ fbSlitsPower.xPMPSMode := TRUE;
 fbSlitsPower.SetAptWidthHeight(Width := 50.0, Height := 40.0);
 
 // Inside the authorized envelope.
-fbSlitsPower.rActApertureSizeX := 20.0;
-fbSlitsPower.rActApertureSizeY := 10.0;
-fbSlitsPower.rActCenterX := 0.0;
-fbSlitsPower.rActCenterY := 0.0;
+fbSlitsPower.SetActualAperture(ApertureSizeX := 20.0, ApertureSizeY := 10.0, CenterX := 0.0, CenterY := 0.0);
 fbSlitsPower.M_UpdatePMPS(1);
 AssertTrue(fbSlitsPower.FFO.i_xOK, 'gap inside the trusted request leaves the FFO ok');
 AssertTrue(
@@ -276,13 +273,13 @@ AssertTrue(
 );
 
 // Actual X gap above the trusted width: fault and snap the request back.
-fbSlitsPower.rActApertureSizeX := 60.0;
+fbSlitsPower.SetActualAperture(ApertureSizeX := 60.0, ApertureSizeY := 10.0, CenterX := 0.0, CenterY := 0.0);
 fbSlitsPower.M_UpdatePMPS(1);
 AssertFalse(fbSlitsPower.FFO.i_xOK, 'gap above the trusted request faults the FFO');
 AssertTrue(fbSlitsPower.rReqApertureSizeX = 49.99, 'request snapped to the trusted width minus the margin');
 
 // Local mode always faults.
-fbSlitsPower.rActApertureSizeX := 20.0;
+fbSlitsPower.SetActualAperture(ApertureSizeX := 20.0, ApertureSizeY := 10.0, CenterX := 0.0, CenterY := 0.0);
 fbSlitsPower.xPMPSMode := FALSE;
 fbSlitsPower.M_UpdatePMPS(1);
 AssertFalse(fbSlitsPower.FFO.i_xOK, 'Local mode faults the FFO');

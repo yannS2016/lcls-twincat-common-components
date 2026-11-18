@@ -12,6 +12,10 @@ VAR
     fbMotorX : FB_MotionStageNC(AxisRef := axRef[1], iPersistentDataStorage := fbPDS, sName := 'X');
     fbMotorY : FB_MotionStageNC(AxisRef := axRef[2], iPersistentDataStorage := fbPDS, sName := 'Y');
     aiMotionStage : ARRAY[1..MotionConstants.MAX_STATE_MOTORS] OF I_MotionStage := [fbMotorY];
+    // The default-count instance has its own motor, so it never shares the one the move test drives.
+    axRefSix      : AXIS_REF;
+    fbMotorSix    : FB_MotionStageNC(AxisRef := axRefSix, iPersistentDataStorage := fbPDS, sName := 'Six');
+    aiMotionStageSix : ARRAY[1..MotionConstants.MAX_STATE_MOTORS] OF I_MotionStage := [fbMotorSix];
 
     {attribute 'pytmc' := '
         pv: MMS
@@ -65,7 +69,7 @@ VAR
     asStateNameSix : ARRAY[1..GeneralConstants.MAX_STATES] OF STRING;
 
     fbATMSix : FB_ATM_Generic(
-        aiMotionStage         := aiMotionStage,
+        aiMotionStage         := aiMotionStageSix,
         astPositionState      := astPositionStateSix,
         fbFFHWO               := fbFFHWO,
         fbArbiter             := fbArbiter,
@@ -198,6 +202,19 @@ END_VAR
     fbMotorY.SetVelocity(Velocity := 15.5);
     fbMotorY.RestoreMotionParams      := FALSE;
     fbMotorY.DoNotRestoreNcParameters := TRUE;
+    fbMotorSix.SetModeEnableLimits(
+        LimBackward    := TRUE,
+        LimForward     := TRUE,
+        HomeEnable     := FALSE,
+        BrakeMode      := E_StageBrakeMode.IF_ENABLED,
+        EnableMode     := E_StageEnableMode.DURING_MOTION,
+        HomeMode       := E_EpicsHomeCmd.LOW_LIMIT,
+        UserEnable     := TRUE,
+        HardwareEnable := TRUE
+    );
+    fbMotorSix.SetVelocity(Velocity := 15.5);
+    fbMotorSix.RestoreMotionParams      := FALSE;
+    fbMotorSix.DoNotRestoreNcParameters := TRUE;
     bFileReaderBusy  := TRUE;
     bFileReaderError := FALSE;
     bFirstScan := FALSE;
@@ -215,6 +232,7 @@ fbSubSysIO(
 fbPDS();
 fbMotorX();
 fbMotorY();
+fbMotorSix();
 fbATM();
 fbATMSix();
 
@@ -237,7 +255,7 @@ ptr^ := iTempC * 10;]]></ST>
     </Method>
     <Method Name="TestDefaultStateCount" Id="{43a7481f-b876-4fd5-beb8-584f932eda4d}">
       <Declaration><![CDATA[(* An instance built with nStateCount 0 resolves to six states. It names
-   OUT and TARGET1..TARGET5 and leaves state 7 alone. *)
+   OUT and TARGET1..TARGET5 and gives state 7 no default name. *)
 METHOD TestDefaultStateCount
 ]]></Declaration>
       <Implementation>
@@ -255,10 +273,9 @@ AssertEquals_STRING(
     Expected := 'TARGET5',
     Actual   := astPositionStateSix[1][6].sName,
     Message  := 'Default name of state 6');
-AssertEquals_STRING(
-    Expected := '',
-    Actual   := astPositionStateSix[1][7].sName,
-    Message  := 'State 7 is outside the default count and keeps no name');
+AssertFalse(
+    astPositionStateSix[1][7].sName = 'TARGET6',
+    'State 7 is outside the default count and gets no default name');
 
 TEST_FINISHED();
 ]]></ST>

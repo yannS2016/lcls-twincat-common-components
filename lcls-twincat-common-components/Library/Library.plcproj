@@ -234,11 +234,20 @@
     <Compile Include="Tests\FB_XPIMTest.TcPOU">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Tests\Helpers\FB_ATMInitHost.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Tests\Helpers\FB_PMPSJsonTestHelper.TcPOU">
       <SubType>Code</SubType>
       <ExcludeFromBuild>false</ExcludeFromBuild>
     </Compile>
     <Compile Include="Tests\Helpers\FB_CC_PMPSTestSetup.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Tests\FB_ATMInitTest.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Tests\PRG_ATMInit.TcPOU">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Tests\PRG_TEST.TcPOU">

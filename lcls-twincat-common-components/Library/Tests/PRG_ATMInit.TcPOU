@@ -1,0 +1,61 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <POU Name="PRG_ATMInit" Id="{320538ce-3d32-464e-a1a8-5a9249218d56}" SpecialFunc="None">
+    <Declaration><![CDATA[(* Instances for FB_ATMInitTest. Nothing here is ticked: the test only checks what
+   construction and the automatic CallAfterInit leave in the state arrays.
+   fbATM is declared directly in this PROGRAM, so its references are valid when
+   its declaration initialisers run. fbHost holds a second FB_ATM inside an FB,
+   where they are not. *)
+PROGRAM PRG_ATMInit
+VAR
+    axRef         : AXIS_REF;
+    fbPDS         : LCLS_Tc_DevAbs.FB_PersistentDataStorage;
+    fbMotor       : FB_MotionStageNC(AxisRef := axRef, iPersistentDataStorage := fbPDS, sName := 'INIT');
+    aiMotionStage : ARRAY[1..MotionConstants.MAX_STATE_MOTORS] OF I_MotionStage := [fbMotor];
+
+    fbFFHWO          : FB_HardwareFFOutput;
+    fbArbiter        : FB_Arbiter(1);
+    bFileReaderBusy  : BOOL;
+    bFileReaderError : BOOL;
+
+    // States of the FB_ATM declared in this PROGRAM.
+    astPositionStatePrg : ARRAY[1..MotionConstants.MAX_STATE_MOTORS]
+                            OF ARRAY[1..GeneralConstants.MAX_STATES] OF ST_PositionState;
+    fbATM : FB_ATM(
+        aiMotionStage         := aiMotionStage,
+        astPositionState      := astPositionStatePrg,
+        fbFFHWO               := fbFFHWO,
+        fbArbiter             := fbArbiter,
+        sDeviceName           := 'TST:ATMINIT',
+        sTransitionKey        := 'TST:ATMINIT-TRANSITION',
+        bEnableBeamParams     := FALSE,
+        bEnablePositionLimits := FALSE,
+        bReadDBNow            := FALSE,
+        bFileReaderBusy       := bFileReaderBusy,
+        bFileReaderError      := bFileReaderError
+    );
+
+    // States of the FB_ATM nested in fbHost.
+    astPositionStateNested : ARRAY[1..MotionConstants.MAX_STATE_MOTORS]
+                               OF ARRAY[1..GeneralConstants.MAX_STATES] OF ST_PositionState;
+    fbHost : FB_ATMInitHost(
+        aiMotionStage         := aiMotionStage,
+        astPositionState      := astPositionStateNested,
+        fbFFHWO               := fbFFHWO,
+        fbArbiter             := fbArbiter,
+        sDeviceName           := 'TST:ATMNEST',
+        sTransitionKey        := 'TST:ATMNEST-TRANSITION',
+        bEnableBeamParams     := FALSE,
+        bEnablePositionLimits := FALSE,
+        bReadDBNow            := FALSE,
+        bFileReaderBusy       := bFileReaderBusy,
+        bFileReaderError      := bFileReaderError
+    );
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[// Nothing to run: FB_ATMInitTest reads the results of initialization.
+]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>

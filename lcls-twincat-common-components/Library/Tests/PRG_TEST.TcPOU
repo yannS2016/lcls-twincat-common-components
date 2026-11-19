@@ -7,6 +7,7 @@ VAR
     (* Seeds PMPS_GVL.BP_jsonDoc with the fake test PMPS DB in before any test FB body runs. *)
     fbPmpsTestSetup: FB_CC_PMPSTestSetup;
     fbATMTest: FB_ATMTest;
+    fbATMInitTest: FB_ATMInitTest;
     fbGBSTest: FB_GBSTest;
     fbIPMTest: FB_IPMTest;
     fbKBOTest: FB_KBOTest;

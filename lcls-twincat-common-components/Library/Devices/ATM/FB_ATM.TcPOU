@@ -141,11 +141,19 @@ SUPER^.CallAfterInitCore();
       <Declaration><![CDATA[(* Full init of every state of astPositionState: gives it its name (sName) and
    its in-position tolerance (fDelta, FDELTA_DEFAULT) by running afbStateDefaults. astPositionState belongs to the caller, so the
    configurators can only be given the slots once this FB holds the caller's
-   reference, and have to run again when a host FB re-wires this one. *)
+   reference, and have to run again when a host FB re-wires this one. Returns
+   without writing while astPositionState is nil: a nested FB_ATM runs its own
+   CallAfterInit before its host has supplied the reference, and indexing a nil
+   reference yields an address that passes __ISVALIDREF but faults on the first
+   write. *)
 METHOD PROTECTED InitStateDefaults
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[afbStateDefaults[1].CallAfterInit(
+        <ST><![CDATA[IF NOT __ISVALIDREF(THIS^.astPositionState) THEN
+    RETURN;
+END_IF
+
+afbStateDefaults[1].CallAfterInit(
     stPositionState := THIS^.astPositionState[1][E_ATM_States.OUT]
 );
 afbStateDefaults[2].CallAfterInit(

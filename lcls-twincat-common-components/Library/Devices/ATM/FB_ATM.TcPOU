@@ -138,8 +138,8 @@ SUPER^.CallAfterInitCore();
       </Implementation>
     </Method>
     <Method Name="InitStateDefaults" Id="{373c20ba-9556-4e57-8253-77c7553df9bd}">
-      <Declaration><![CDATA[(* Fully initializes every state of astPositionState (sName and fDelta) by
-   running afbStateDefaults. astPositionState belongs to the caller, so the
+      <Declaration><![CDATA[(* Full init of every state of astPositionState: gives it its name (sName) and
+   its in-position tolerance (fDelta, FDELTA_DEFAULT) by running afbStateDefaults. astPositionState belongs to the caller, so the
    configurators can only be given the slots once this FB holds the caller's
    reference, and have to run again when a host FB re-wires this one. *)
 METHOD PROTECTED InitStateDefaults

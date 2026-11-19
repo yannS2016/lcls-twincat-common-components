@@ -83,14 +83,20 @@ SUPER^.eEnumGetRef REF= THIS^.eEnumGet;]]></ST>
       </Implementation>
     </Method>
     <Method Name="CallAfterInit" Id="{2f5a266d-a319-48e1-b797-55a7489c8359}">
-      <Declaration><![CDATA[(* Auto-fired after FB_Init, together with the base CallAfterInit. Writes the
-   per-state sName and fDelta through the configurators, which need the slot
-   references that FB_Init has bound by now. *)
+      <Declaration><![CDATA[(* Auto-fired after FB_Init, together with the base CallAfterInit. Binds the
+   state bridge again, because every base member is a reference and this FB may
+   be instantiated inside another FB, where the FB_Init binding can happen
+   before the enclosing FB's own storage is valid. Then writes the per-state
+   sName and fDelta through the configurators, which need the slot references
+   bound by now. *)
 {attribute 'call_after_init'}
 METHOD CallAfterInit
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[afbStateDefaults[1].CallAfterInit(
+        <ST><![CDATA[SUPER^.eEnumSetRef REF= THIS^.eEnumSet;
+SUPER^.eEnumGetRef REF= THIS^.eEnumGet;
+
+afbStateDefaults[1].CallAfterInit(
     stPositionState := THIS^.astPositionState[1][E_ATM_States.OUT]
 );
 afbStateDefaults[2].CallAfterInit(

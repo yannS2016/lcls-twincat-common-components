@@ -57,10 +57,8 @@ END_VAR]]></Declaration>
     </Implementation>
     <Method Name="FB_Init" Id="{4d59ebc2-c21f-4355-9b6d-75854f0da2d1}">
       <Declaration><![CDATA[(* Repeats the eleven FB_ATM_Core inputs, as a derived FB_Init must, and
-   provides every one of them to the base: the references, the strings and the
-   flags go into the FB_ATM_Core fields through SUPER^, then the state bridge
-   is bound to this FB's own enum variables. The base holds only references, so
-   the derived type supplies them. Runs before any CallAfterInit. *)
+   forwards them to CallAfterInitATM, which provides them to the base and binds
+   the state bridge. Runs before any CallAfterInit. *)
 {attribute 'analysis' := '-33'}
 METHOD FB_Init : BOOL
 VAR_INPUT
@@ -80,6 +78,44 @@ VAR_INPUT
     bFileReaderError       : REFERENCE TO BOOL;
 END_VAR]]></Declaration>
       <Implementation>
+        <ST><![CDATA[THIS^.CallAfterInitATM(
+    aiMotionStage         := aiMotionStage,
+    astPositionState      := astPositionState,
+    fbFFHWO               := fbFFHWO,
+    fbArbiter             := fbArbiter,
+    sDeviceName           := sDeviceName,
+    sTransitionKey        := sTransitionKey,
+    bEnableBeamParams     := bEnableBeamParams,
+    bEnablePositionLimits := bEnablePositionLimits,
+    bReadDBNow            := bReadDBNow,
+    bFileReaderBusy       := bFileReaderBusy,
+    bFileReaderError      := bFileReaderError
+);]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="CallAfterInitATM" Id="{8a40c3bc-e5b7-47ec-8c6d-2ba5964f68de}">
+      <Declaration><![CDATA[(* Provides every FB_ATM_Core input and binds the state bridge to this FB's enum
+   variables. FB_Init calls it with the PRG arguments. An FB that instantiates
+   FB_ATM inside itself calls it again from its own CallAfterInit with the
+   now-valid references, and then calls fbATM.CallAfterInit() so fbStates is
+   wired. The base holds only references, so the derived type supplies them. *)
+METHOD CallAfterInitATM
+VAR_INPUT
+    aiMotionStage          : REFERENCE TO ARRAY[1..MotionConstants.MAX_STATE_MOTORS] OF I_MotionStage;
+    astPositionState       : REFERENCE TO ARRAY[1..MotionConstants.MAX_STATE_MOTORS]
+                                            OF ARRAY[1..GeneralConstants.MAX_STATES] OF ST_PositionState;
+    fbFFHWO                : REFERENCE TO FB_HardwareFFOutput;
+    fbArbiter              : REFERENCE TO FB_Arbiter;
+    sDeviceName            : STRING;
+    sTransitionKey         : STRING;
+    bEnableBeamParams      : BOOL;
+    bEnablePositionLimits  : BOOL;
+    bReadDBNow             : BOOL;
+    bFileReaderBusy        : REFERENCE TO BOOL;
+    bFileReaderError       : REFERENCE TO BOOL;
+END_VAR
+]]></Declaration>
+      <Implementation>
         <ST><![CDATA[SUPER^.aiMotionStage         REF= aiMotionStage;
 SUPER^.astPositionState      REF= astPositionState;
 SUPER^.fbFFHWO               REF= fbFFHWO;
@@ -93,7 +129,8 @@ SUPER^.bFileReaderBusy       REF= bFileReaderBusy;
 SUPER^.bFileReaderError      REF= bFileReaderError;
 
 SUPER^.eEnumSetRef REF= THIS^.eEnumSet;
-SUPER^.eEnumGetRef REF= THIS^.eEnumGet;]]></ST>
+SUPER^.eEnumGetRef REF= THIS^.eEnumGet;
+]]></ST>
       </Implementation>
     </Method>
     <Method Name="CallAfterInit" Id="{2f5a266d-a319-48e1-b797-55a7489c8359}">

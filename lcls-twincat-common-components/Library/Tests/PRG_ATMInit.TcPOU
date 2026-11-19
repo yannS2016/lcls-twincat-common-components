@@ -8,6 +8,7 @@
    where they are not. *)
 PROGRAM PRG_ATMInit
 VAR
+	{attribute 'TcNcAxis' := 'PRG_ATM_X'}
     axRef         : AXIS_REF;
     fbPDS         : LCLS_Tc_DevAbs.FB_PersistentDataStorage;
     fbMotor       : FB_MotionStageNC(AxisRef := axRef, iPersistentDataStorage := fbPDS, sName := 'INIT');
@@ -34,23 +35,23 @@ VAR
         bFileReaderBusy       := bFileReaderBusy,
         bFileReaderError      := bFileReaderError
     );
-
-    // States of the FB_ATM nested in fbHost.
-    astPositionStateNested : ARRAY[1..MotionConstants.MAX_STATE_MOTORS]
-                               OF ARRAY[1..GeneralConstants.MAX_STATES] OF ST_PositionState;
-    fbHost : FB_ATMInitHost(
-        aiMotionStage         := aiMotionStage,
-        astPositionState      := astPositionStateNested,
-        fbFFHWO               := fbFFHWO,
-        fbArbiter             := fbArbiter,
-        sDeviceName           := 'TST:ATMNEST',
-        sTransitionKey        := 'TST:ATMNEST-TRANSITION',
-        bEnableBeamParams     := FALSE,
-        bEnablePositionLimits := FALSE,
-        bReadDBNow            := FALSE,
-        bFileReaderBusy       := bFileReaderBusy,
-        bFileReaderError      := bFileReaderError
-    );
+// 
+//     // States of the FB_ATM nested in fbHost.
+//     astPositionStateNested : ARRAY[1..MotionConstants.MAX_STATE_MOTORS]
+//                                OF ARRAY[1..GeneralConstants.MAX_STATES] OF ST_PositionState;
+//     fbHost : FB_ATMInitHost(
+//         aiMotionStage         := aiMotionStage,
+//         astPositionState      := astPositionStateNested,
+//         fbFFHWO               := fbFFHWO,
+//         fbArbiter             := fbArbiter,
+//         sDeviceName           := 'TST:ATMNEST',
+//         sTransitionKey        := 'TST:ATMNEST-TRANSITION',
+//         bEnableBeamParams     := FALSE,
+//         bEnablePositionLimits := FALSE,
+//         bReadDBNow            := FALSE,
+//         bFileReaderBusy       := bFileReaderBusy,
+//         bFileReaderError      := bFileReaderError
+//     );
 END_VAR
 ]]></Declaration>
     <Implementation>

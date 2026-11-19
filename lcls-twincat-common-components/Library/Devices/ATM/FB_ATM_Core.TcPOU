@@ -11,14 +11,15 @@
    tick site for the in-beam thermocouple and flow meter.
 
    A derived type supplies everything that depends on the state list:
-     - nothing for the state bridge: the caller owns the enum variables
-       (UINT base, OUT = 1, then the targets) with the MMS:STATE:SET and
-       MMS:STATE:GET pytmc pragmas, so the EPICS state menu comes from that
-       enum, and passes them to FB_Init as eEnumSetRef and eEnumGetRef;
+     - eEnumSet and eEnumGet, the device enum (UINT base, OUT = 1, then the
+       targets) with the MMS:STATE:SET and MMS:STATE:GET pytmc pragmas, so the
+       EPICS state menu comes from that enum;
      - afbStateDefaults, one FB_CC_InternalStateConfig per state, which writes
-       the per-state sName and fDelta, and a CallAfterInit that calls them.
-       The base CallAfterInit runs on its own through the call_after_init
-       attribute.
+       the per-state sName and fDelta;
+     - an FB_Init that repeats the inputs below and binds eEnumSetRef and
+       eEnumGetRef to the enum variables, and a CallAfterInit that calls the
+       configurators. The base CallAfterInit runs on its own through the
+       call_after_init attribute.
    FB_ATM is the library derived type (E_ATM_States). A device with another
    state list derives this FB the same way.
 
@@ -184,8 +185,6 @@ VAR_INPUT
     bReadDBNow             : BOOL;
     bFileReaderBusy        : REFERENCE TO BOOL;
     bFileReaderError       : REFERENCE TO BOOL;
-    eEnumSetRef            : REFERENCE TO UINT;
-    eEnumGetRef            : REFERENCE TO UINT;
 END_VAR]]></Declaration>
       <Implementation>
         <ST><![CDATA[THIS^.aiMotionStage    REF= aiMotionStage;
@@ -198,9 +197,7 @@ THIS^.bEnableBeamParams     := bEnableBeamParams;
 THIS^.bEnablePositionLimits := bEnablePositionLimits;
 THIS^.bReadDBNow            := bReadDBNow;
 THIS^.bFileReaderBusy       REF= bFileReaderBusy;
-THIS^.bFileReaderError      REF= bFileReaderError;
-THIS^.eEnumSetRef           REF= eEnumSetRef;
-THIS^.eEnumGetRef           REF= eEnumGetRef;]]></ST>
+THIS^.bFileReaderError      REF= bFileReaderError;]]></ST>
       </Implementation>
     </Method>
   </POU>

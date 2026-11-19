@@ -56,9 +56,11 @@ END_VAR]]></Declaration>
       <ST><![CDATA[SUPER^();]]></ST>
     </Implementation>
     <Method Name="FB_Init" Id="{4d59ebc2-c21f-4355-9b6d-75854f0da2d1}">
-      <Declaration><![CDATA[(* Repeats the eleven FB_ATM_Core inputs, as a derived FB_Init must, and binds
-   the base state bridge to this FB's own enum variables. Runs before any
-   CallAfterInit, so the base wires fbStates with a valid bridge. *)
+      <Declaration><![CDATA[(* Repeats the eleven FB_ATM_Core inputs, as a derived FB_Init must, and
+   provides every one of them to the base: the references, the strings and the
+   flags go into the FB_ATM_Core fields through SUPER^, then the state bridge
+   is bound to this FB's own enum variables. The base holds only references, so
+   the derived type supplies them. Runs before any CallAfterInit. *)
 {attribute 'analysis' := '-33'}
 METHOD FB_Init : BOOL
 VAR_INPUT
@@ -78,7 +80,19 @@ VAR_INPUT
     bFileReaderError       : REFERENCE TO BOOL;
 END_VAR]]></Declaration>
       <Implementation>
-        <ST><![CDATA[SUPER^.eEnumSetRef REF= THIS^.eEnumSet;
+        <ST><![CDATA[SUPER^.aiMotionStage         REF= aiMotionStage;
+SUPER^.astPositionState      REF= astPositionState;
+SUPER^.fbFFHWO               REF= fbFFHWO;
+SUPER^.fbArbiter             REF= fbArbiter;
+SUPER^.sDeviceName           := sDeviceName;
+SUPER^.sTransitionKey        := sTransitionKey;
+SUPER^.bEnableBeamParams     := bEnableBeamParams;
+SUPER^.bEnablePositionLimits := bEnablePositionLimits;
+SUPER^.bReadDBNow            := bReadDBNow;
+SUPER^.bFileReaderBusy       REF= bFileReaderBusy;
+SUPER^.bFileReaderError      REF= bFileReaderError;
+
+SUPER^.eEnumSetRef REF= THIS^.eEnumSet;
 SUPER^.eEnumGetRef REF= THIS^.eEnumGet;]]></ST>
       </Implementation>
     </Method>

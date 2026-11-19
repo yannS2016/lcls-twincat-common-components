@@ -57,8 +57,8 @@ END_VAR]]></Declaration>
     </Implementation>
     <Method Name="FB_Init" Id="{4d59ebc2-c21f-4355-9b6d-75854f0da2d1}">
       <Declaration><![CDATA[(* Repeats the eleven FB_ATM_Core inputs, as a derived FB_Init must, and
-   forwards them to CallAfterInitATM, which provides them to the base and binds
-   the state bridge. Runs before any CallAfterInit. *)
+   forwards them to CallAfterInitATM, which provides them to the base, binds
+   the state bridge and wires the states. Runs before any CallAfterInit. *)
 {attribute 'analysis' := '-33'}
 METHOD FB_Init : BOOL
 VAR_INPUT
@@ -94,11 +94,12 @@ END_VAR]]></Declaration>
       </Implementation>
     </Method>
     <Method Name="CallAfterInitATM" Id="{8a40c3bc-e5b7-47ec-8c6d-2ba5964f68de}">
-      <Declaration><![CDATA[(* Provides every FB_ATM_Core input and binds the state bridge to this FB's enum
-   variables. FB_Init calls it with the PRG arguments. An FB that instantiates
-   FB_ATM inside itself calls it again from its own CallAfterInit with the
-   now-valid references, and then calls fbATM.CallAfterInit() so fbStates is
-   wired. The base holds only references, so the derived type supplies them. *)
+      <Declaration><![CDATA[(* Provides every FB_ATM_Core input, binds the state bridge, writes the per-state
+   defaults and wires fbStates. FB_Init calls it with the PRG arguments. An FB
+   that instantiates FB_ATM inside itself calls it again from its own
+   CallAfterInit: the nested FB's CallAfterInit runs before the host's, with
+   nil references, so this method has to redo the whole wiring, base included.
+   The base holds only references, so the derived type supplies them. *)
 METHOD CallAfterInitATM
 VAR_INPUT
     aiMotionStage          : REFERENCE TO ARRAY[1..MotionConstants.MAX_STATE_MOTORS] OF I_MotionStage;
@@ -128,20 +129,16 @@ SUPER^.bReadDBNow            := bReadDBNow;
 SUPER^.bFileReaderBusy       REF= bFileReaderBusy;
 SUPER^.bFileReaderError      REF= bFileReaderError;
 
-SUPER^.eEnumSetRef REF= THIS^.eEnumSet;
-SUPER^.eEnumGetRef REF= THIS^.eEnumGet;
+THIS^.ConfigureStates();
+SUPER^.CallAfterInitCore();
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="CallAfterInit" Id="{2f5a266d-a319-48e1-b797-55a7489c8359}">
-      <Declaration><![CDATA[(* Auto-fired after FB_Init, together with the base CallAfterInit. Binds the
-   state bridge again, because every base member is a reference and this FB may
-   be instantiated inside another FB, where the FB_Init binding can happen
-   before the enclosing FB's own storage is valid. Then writes the per-state
+    <Method Name="ConfigureStates" Id="{373c20ba-9556-4e57-8253-77c7553df9bd}">
+      <Declaration><![CDATA[(* Binds the state bridge to this FB's enum variables and writes the per-state
    sName and fDelta through the configurators, which need the slot references
    bound by now. *)
-{attribute 'call_after_init'}
-METHOD CallAfterInit
+METHOD PROTECTED ConfigureStates
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[SUPER^.eEnumSetRef REF= THIS^.eEnumSet;
@@ -165,6 +162,18 @@ afbStateDefaults[5].CallAfterInit(
 afbStateDefaults[6].CallAfterInit(
     stPositionState := THIS^.astPositionState[1][E_ATM_States.TARGET5]
 );
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="CallAfterInit" Id="{2f5a266d-a319-48e1-b797-55a7489c8359}">
+      <Declaration><![CDATA[(* Auto-fired after FB_Init, together with the base CallAfterInit. Binds the
+   state bridge and writes the per-state defaults. The enum variables belong to
+   this FB, so they are bound here again after FB_Init. *)
+{attribute 'call_after_init'}
+METHOD CallAfterInit
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[THIS^.ConfigureStates();
 ]]></ST>
       </Implementation>
     </Method>

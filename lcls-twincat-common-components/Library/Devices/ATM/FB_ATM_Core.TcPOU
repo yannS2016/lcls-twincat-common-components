@@ -120,14 +120,13 @@ fbTempSensor1(
 
 fbFlowMeter();]]></ST>
     </Implementation>
-    <Method Name="CallAfterInit" Id="{a97fcae5-1420-4268-8023-befe115b659f}">
-      <Declaration><![CDATA[(* Auto-fired after FB_Init. The derived CallAfterInit binds the state bridge
-   first and then calls this method, which re-supplies the now-valid refs to
-   fbStates through CallAfterInitStateMover / CallAfterInitPMPS, because
-   fbStates' inline-init ran first and forwarded nil refs. Does nothing while
-   the essential refs are still nil. *)
-{attribute 'call_after_init'}
-METHOD CallAfterInit
+    <Method Name="CallAfterInitCore" Id="{85d661a7-6fb2-44c7-9a53-7e1119321676}">
+      <Declaration><![CDATA[(* Wires fbStates with the references this FB holds, through
+   CallAfterInitStateMover / CallAfterInitPMPS, because fbStates' inline-init
+   ran first and forwarded nil refs. Does nothing while the essential refs are
+   still nil. CallAfterInit calls it. A derived type that was re-wired after its
+   host FB's CallAfterInit calls it again through SUPER^. *)
+METHOD PROTECTED CallAfterInitCore
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[IF NOT __ISVALIDREF(aiMotionStage)
@@ -160,6 +159,16 @@ THIS^.fbStates.CallAfterInitPMPS(
     sDeviceName           := sDeviceName,
     sTransitionKey        := sTransitionKey
 );
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="CallAfterInit" Id="{a97fcae5-1420-4268-8023-befe115b659f}">
+      <Declaration><![CDATA[(* Auto-fired after FB_Init. Wires fbStates through CallAfterInitCore. *)
+{attribute 'call_after_init'}
+METHOD CallAfterInit
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[THIS^.CallAfterInitCore();
 ]]></ST>
       </Implementation>
     </Method>

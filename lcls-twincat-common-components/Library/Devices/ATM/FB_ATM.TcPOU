@@ -2,11 +2,9 @@
 <TcPlcObject Version="1.1.0.1">
   <POU Name="FB_ATM" Id="{2f5a266c-a319-48e1-b797-55a7489c8358}" SpecialFunc="None">
     <Declaration><![CDATA[(* Arrival Time Monitor with the library state enum E_ATM_States (OUT,
-   TARGET1..TARGET5): FB_ATM_Core with the enum bridge owned here. The
-   MMS:STATE:SET and MMS:STATE:GET PVs and the state names are the same as
-   before. A device with a different state list uses FB_ATM_Generic
-   with its own enum. FB_Init is inherited, so the caller injects the same
-   references as for FB_ATM_Core and leaves the bridge arguments out. *)
+   TARGET1..TARGET5): FB_ATM_Core plus the enum bridge and the per-state
+   defaults. FB_Init is inherited from FB_ATM_Core. A device with another
+   state list derives FB_ATM_Core the same way. *)
 {attribute 'call_after_init'}
 FUNCTION_BLOCK FB_ATM EXTENDS FB_ATM_Core
 VAR
@@ -21,6 +19,30 @@ VAR
         io: io
     '}
     eEnumSet : E_ATM_States;
+
+    (* One configurator per ATM state (OUT + 5 targets). Writes the
+       per-state sName and fDelta once in its CallAfterInit, which this
+       FB's CallAfterInit calls. *)
+    afbStateDefaults : ARRAY[1..6] OF FB_CC_InternalStateConfig[
+        (stPositionState := astPositionState[1][E_ATM_States.OUT],
+         sName           := 'OUT',
+         fDelta          := FDELTA_DEFAULT),
+        (stPositionState := astPositionState[1][E_ATM_States.TARGET1],
+         sName           := 'TARGET1',
+         fDelta          := FDELTA_DEFAULT),
+        (stPositionState := astPositionState[1][E_ATM_States.TARGET2],
+         sName           := 'TARGET2',
+         fDelta          := FDELTA_DEFAULT),
+        (stPositionState := astPositionState[1][E_ATM_States.TARGET3],
+         sName           := 'TARGET3',
+         fDelta          := FDELTA_DEFAULT),
+        (stPositionState := astPositionState[1][E_ATM_States.TARGET4],
+         sName           := 'TARGET4',
+         fDelta          := FDELTA_DEFAULT),
+        (stPositionState := astPositionState[1][E_ATM_States.TARGET5],
+         sName           := 'TARGET5',
+         fDelta          := FDELTA_DEFAULT)
+    ];
 END_VAR
 VAR_OUTPUT
     // The current position state as an enum.
@@ -35,8 +57,8 @@ END_VAR]]></Declaration>
     </Implementation>
     <Method Name="CallAfterInit" Id="{2f5a266d-a319-48e1-b797-55a7489c8359}">
       <Declaration><![CDATA[(* Auto-fired after FB_Init. Binds the base's UINT state bridge to
-   eEnumSet and eEnumGet, then runs the base CallAfterInit, which writes the
-   state names and wires fbStates. The bridge goes through UINT pointers
+   eEnumSet and eEnumGet, writes the per-state defaults, then runs the base
+   CallAfterInit, which wires fbStates. The bridge goes through UINT pointers
    because the base references are typed UINT. *)
 {attribute 'call_after_init'}
 METHOD CallAfterInit
@@ -51,9 +73,12 @@ pEnumGet := ADR(THIS^.eEnumGet);
 THIS^.eEnumSetRef REF= pEnumSet^;
 THIS^.eEnumGetRef REF= pEnumGet^;
 
-IF THIS^.nStateCount = 0 THEN
-    THIS^.nStateCount := nDefaultStateCount;
-END_IF
+afbStateDefaults[1].CallAfterInit(stPositionState := THIS^.astPositionState[1][E_ATM_States.OUT]);
+afbStateDefaults[2].CallAfterInit(stPositionState := THIS^.astPositionState[1][E_ATM_States.TARGET1]);
+afbStateDefaults[3].CallAfterInit(stPositionState := THIS^.astPositionState[1][E_ATM_States.TARGET2]);
+afbStateDefaults[4].CallAfterInit(stPositionState := THIS^.astPositionState[1][E_ATM_States.TARGET3]);
+afbStateDefaults[5].CallAfterInit(stPositionState := THIS^.astPositionState[1][E_ATM_States.TARGET4]);
+afbStateDefaults[6].CallAfterInit(stPositionState := THIS^.astPositionState[1][E_ATM_States.TARGET5]);
 
 SUPER^.CallAfterInit();
 ]]></ST>

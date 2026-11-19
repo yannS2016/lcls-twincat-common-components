@@ -2,25 +2,23 @@
 <TcPlcObject Version="1.1.0.1">
   <POU Name="FB_ATM_Core" Id="{0b07f9bb-47d7-44ec-ac70-db2931ab90d6}" SpecialFunc="None">
     <Declaration><![CDATA[(* Arrival Time Monitor core: thin ND-framework state-mover wrapper that holds
-   no enum type of its own. FB_Init takes the same eleven arguments as the
-   legacy FB_ATM. The state bridge, state count and state names are fields that
-   a derived type binds before it calls CallAfterInit: FB_ATM_Generic takes them
-   through its own FB_Init, FB_ATM binds its E_ATM_States variables. Y mover via FB_PositionStatePMPSND over one motor,
-   plus a tick site for the in-beam thermocouple and flow meter.
+   no enum type and no state names. Y mover via FB_PositionStatePMPSND over one
+   motor, plus a tick site for the in-beam thermocouple and flow meter.
 
-   The state bridge is caller-owned. The integrator declares its own enum
-   (UINT base, OUT = 1, then the targets) with the MMS:STATE:SET and
-   MMS:STATE:GET pytmc pragmas on its own variables, so the EPICS state menu
-   comes from that enum, and hands the two variables over as REFERENCE TO UINT. State 1 is OUT, which vetoes the thermocouple.
-   nStateCount counts OUT plus the targets (0 means 6, limited to
-   2..GeneralConstants.MAX_STATES). asStateName optionally names each state;
-   a nil array or a blank entry falls back to OUT and TARGET1, TARGET2, ...
-   FB_ATM wraps this FB with E_ATM_States for the library-standard ATM, and
-   FB_ATM_Generic wraps it with caller-owned bridge variables.
+   A derived type supplies everything that depends on the state list:
+     - eEnumSet and eEnumGet, the device enum (UINT base, OUT = 1, then the
+       targets) with the MMS:STATE:SET and MMS:STATE:GET pytmc pragmas, so the
+       EPICS state menu comes from that enum;
+     - afbStateDefaults, one FB_CC_InternalStateConfig per state, which writes
+       the per-state sName and fDelta;
+     - a CallAfterInit that binds eEnumSetRef and eEnumGetRef to the enum
+       variables, calls the configurators, then calls SUPER^.CallAfterInit().
+   FB_ATM is the library derived type (E_ATM_States). A device with another
+   state list, such as FB_TM1K2 or FB_TM1L2, derives this FB the same way.
 
    Caller-owned dependencies are injected through FB_Init as REFERENCE TO and
-   forwarded to fbStates in CallAfterInit. The per-state sName and fDelta are
-   written once there. *)
+   forwarded to fbStates in CallAfterInit. State 1 is OUT, which vetoes the
+   thermocouple. *)
 {attribute 'call_after_init'}
 FUNCTION_BLOCK FB_ATM_Core
 VAR
@@ -51,18 +49,13 @@ VAR
     bFileReaderBusy       : REFERENCE TO BOOL;
     bFileReaderError      : REFERENCE TO BOOL;
 
-    (* Caller-owned state bridge. eEnumSetRef receives move requests and
-       eEnumGetRef reports the current state. Both are UINT views of the
-       integrator's enum variables. *)
+    (* State bridge, bound by the derived type to its enum variables.
+       eEnumSetRef receives move requests and eEnumGetRef reports the
+       current state. Both are UINT views of those variables. *)
     {attribute 'no_copy'}
     eEnumSetRef           : REFERENCE TO UINT;
     {attribute 'no_copy'}
     eEnumGetRef           : REFERENCE TO UINT;
-    // Number of states in use, OUT included. 0 selects 6; limited in CallAfterInit.
-    nStateCount           : UINT;
-    // Optional per-state names, index 1 is OUT. Blank entries use the defaults.
-    {attribute 'no_copy'}
-    asStateName           : REFERENCE TO ARRAY[1..GeneralConstants.MAX_STATES] OF STRING;
 
     {attribute 'pytmc' := 'pv: MMS'}
     fbStates : FB_PositionStatePMPSND(
@@ -89,13 +82,11 @@ VAR_OUTPUT
     stDbStateParams: ST_DbStateParams;
 END_VAR
 VAR CONSTANT
-    (* ATM-wide default tolerance for state in-position detection,
-       written per state in CallAfterInit. *)
+    (* ATM-wide default tolerance for state in-position detection. Derived
+       types pass it to their afbStateDefaults. *)
     FDELTA_DEFAULT : LREAL := 2;
     // State value of OUT in every ATM enum.
     nOutState : UINT := 1;
-    // State count used when nStateCount is 0.
-    nDefaultStateCount : UINT := 6;
 END_VAR]]></Declaration>
     <Implementation>
       <ST><![CDATA[IF NOT __ISVALIDREF(aiMotionStage)
@@ -121,50 +112,21 @@ fbTempSensor1(
 fbFlowMeter();]]></ST>
     </Implementation>
     <Method Name="CallAfterInit" Id="{a97fcae5-1420-4268-8023-befe115b659f}">
-      <Declaration><![CDATA[(* Auto-fired after FB_Init. Writes the per-state sName and fDelta once, then
-   re-supplies the now-valid refs to fbStates through
-   CallAfterInitStateMover / CallAfterInitPMPS, because fbStates' inline-init
-   ran first and forwarded nil refs. Does nothing while the essential refs
-   are still nil. *)
+      <Declaration><![CDATA[(* Auto-fired after FB_Init. The derived CallAfterInit binds the state bridge
+   first and then calls this method, which re-supplies the now-valid refs to
+   fbStates through CallAfterInitStateMover / CallAfterInitPMPS, because
+   fbStates' inline-init ran first and forwarded nil refs. Does nothing while
+   the essential refs are still nil. *)
 {attribute 'call_after_init'}
 METHOD CallAfterInit
-VAR
-    nState     : UINT;
-    sStateName : STRING;
-END_VAR
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[IF nStateCount = 0 THEN
-    nStateCount := nDefaultStateCount;
-END_IF
-IF nStateCount < 2 THEN
-    nStateCount := 2;
-END_IF
-IF nStateCount > TO_UINT(GeneralConstants.MAX_STATES) THEN
-    nStateCount := TO_UINT(GeneralConstants.MAX_STATES);
-END_IF
-
-IF NOT __ISVALIDREF(aiMotionStage)
+        <ST><![CDATA[IF NOT __ISVALIDREF(aiMotionStage)
    OR NOT __ISVALIDREF(astPositionState)
    OR NOT __ISVALIDREF(eEnumSetRef)
    OR NOT __ISVALIDREF(eEnumGetRef) THEN
     RETURN;
 END_IF
-
-FOR nState := 1 TO nStateCount DO
-    IF nState = nOutState THEN
-        sStateName := 'OUT';
-    ELSE
-        sStateName := CONCAT('TARGET', UINT_TO_STRING(nState - 1));
-    END_IF
-    IF __ISVALIDREF(asStateName) THEN
-        IF LEN(asStateName[nState]) > 0 THEN
-            sStateName := asStateName[nState];
-        END_IF
-    END_IF
-    astPositionState[1][nState].sName  := sStateName;
-    astPositionState[1][nState].fDelta := FDELTA_DEFAULT;
-END_FOR
 
 THIS^.fbStates.CallAfterInitStateMover(
     aiMotionStage         := aiMotionStage,

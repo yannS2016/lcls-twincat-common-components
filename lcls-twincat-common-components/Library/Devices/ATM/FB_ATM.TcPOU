@@ -3,13 +3,13 @@
   <POU Name="FB_ATM" Id="{2f5a266c-a319-48e1-b797-55a7489c8358}" SpecialFunc="None">
     <Declaration><![CDATA[(* Arrival Time Monitor with the library state enum E_ATM_States (OUT,
    TARGET1..TARGET5): FB_ATM_Core plus the enum bridge and the per-state
-   defaults. FB_Init is inherited from FB_ATM_Core. A device with another
-   state list derives FB_ATM_Core the same way. *)
+   defaults. FB_Init repeats the core inputs and binds the bridge. A device
+   with another state list derives FB_ATM_Core the same way. *)
 {attribute 'call_after_init'}
 FUNCTION_BLOCK FB_ATM EXTENDS FB_ATM_Core
 VAR
     (* Device-specific state-enum bridge. Typed as E_ATM_States (UINT
-       base); CallAfterInit binds it to the base's REFERENCE TO UINT
+       base); FB_Init binds it to the base's REFERENCE TO UINT
        bridge. EPICS owns it through the pytmc pragma; PLC code
        must go through the EnumSet property instead of touching it
        directly. *)
@@ -55,21 +55,42 @@ END_VAR]]></Declaration>
     <Implementation>
       <ST><![CDATA[SUPER^();]]></ST>
     </Implementation>
+    <Method Name="FB_Init" Id="{4d59ebc2-c21f-4355-9b6d-75854f0da2d1}">
+      <Declaration><![CDATA[(* Repeats the eleven FB_ATM_Core inputs, as a derived FB_Init must, and binds
+   the base state bridge to this FB's own enum variables. Runs before any
+   CallAfterInit, so the base wires fbStates with a valid bridge. *)
+{attribute 'analysis' := '-33'}
+METHOD FB_Init : BOOL
+VAR_INPUT
+    bInitRetains           : BOOL;
+    bInCopyCode            : BOOL;
+    aiMotionStage          : REFERENCE TO ARRAY[1..MotionConstants.MAX_STATE_MOTORS] OF I_MotionStage;
+    astPositionState       : REFERENCE TO ARRAY[1..MotionConstants.MAX_STATE_MOTORS]
+                                            OF ARRAY[1..GeneralConstants.MAX_STATES] OF ST_PositionState;
+    fbFFHWO                : REFERENCE TO FB_HardwareFFOutput;
+    fbArbiter              : REFERENCE TO FB_Arbiter;
+    sDeviceName            : STRING;
+    sTransitionKey         : STRING;
+    bEnableBeamParams      : BOOL;
+    bEnablePositionLimits  : BOOL;
+    bReadDBNow             : BOOL;
+    bFileReaderBusy        : REFERENCE TO BOOL;
+    bFileReaderError       : REFERENCE TO BOOL;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[SUPER^.eEnumSetRef REF= THIS^.eEnumSet;
+SUPER^.eEnumGetRef REF= THIS^.eEnumGet;]]></ST>
+      </Implementation>
+    </Method>
     <Method Name="CallAfterInit" Id="{2f5a266d-a319-48e1-b797-55a7489c8359}">
-      <Declaration><![CDATA[(* Auto-fired after FB_Init. Binds the base's UINT state bridge to
-   eEnumSet and eEnumGet, writes the per-state defaults, then runs the base
-   CallAfterInit, which wires fbStates. The bridge goes
-   through BindStateBridge, whose inputs are REFERENCE TO UINT. *)
+      <Declaration><![CDATA[(* Auto-fired after FB_Init, together with the base CallAfterInit. Writes the
+   per-state sName and fDelta through the configurators, which need the slot
+   references that FB_Init has bound by now. *)
 {attribute 'call_after_init'}
 METHOD CallAfterInit
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[SUPER^.BindStateBridge(
-    eEnumSet := THIS^.eEnumSet,
-    eEnumGet := THIS^.eEnumGet
-);
-
-afbStateDefaults[1].CallAfterInit(
+        <ST><![CDATA[afbStateDefaults[1].CallAfterInit(
     stPositionState := THIS^.astPositionState[1][E_ATM_States.OUT]
 );
 afbStateDefaults[2].CallAfterInit(
@@ -87,8 +108,6 @@ afbStateDefaults[5].CallAfterInit(
 afbStateDefaults[6].CallAfterInit(
     stPositionState := THIS^.astPositionState[1][E_ATM_States.TARGET5]
 );
-
-SUPER^.CallAfterInit();
 ]]></ST>
       </Implementation>
     </Method>

@@ -11,10 +11,12 @@
        EPICS state menu comes from that enum;
      - afbStateDefaults, one FB_CC_InternalStateConfig per state, which writes
        the per-state sName and fDelta;
-     - a CallAfterInit that binds eEnumSetRef and eEnumGetRef to the enum
-       variables, calls the configurators, then calls SUPER^.CallAfterInit().
+     - an FB_Init that repeats the inputs below and binds eEnumSetRef and
+       eEnumGetRef to the enum variables, and a CallAfterInit that calls the
+       configurators. The base CallAfterInit runs on its own through the
+       call_after_init attribute.
    FB_ATM is the library derived type (E_ATM_States). A device with another
-   state list, such as FB_TM1K2 or FB_TM1L2, derives this FB the same way.
+   state list derives this FB the same way.
 
    Caller-owned dependencies are injected through FB_Init as REFERENCE TO and
    forwarded to fbStates in CallAfterInit. State 1 is OUT, which vetoes the
@@ -113,23 +115,6 @@ fbTempSensor1(
 
 fbFlowMeter();]]></ST>
     </Implementation>
-    <Method Name="BindStateBridge" Id="{c2ee8d04-a9c9-45f5-92a7-21fa86adb172}">
-      <Declaration><![CDATA[(* Binds the state bridge to the derived type's enum variables. A derived
-   CallAfterInit calls this first. The inputs are REFERENCE TO UINT, so the
-   derived enum variables (UINT base) pass in directly, the same way they pass
-   to FB_PositionStatePMPSND. *)
-METHOD BindStateBridge
-VAR_INPUT
-    eEnumSet : REFERENCE TO UINT;
-    eEnumGet : REFERENCE TO UINT;
-END_VAR
-]]></Declaration>
-      <Implementation>
-        <ST><![CDATA[THIS^.eEnumSetRef REF= eEnumSet;
-THIS^.eEnumGetRef REF= eEnumGet;
-]]></ST>
-      </Implementation>
-    </Method>
     <Method Name="CallAfterInit" Id="{a97fcae5-1420-4268-8023-befe115b659f}">
       <Declaration><![CDATA[(* Auto-fired after FB_Init. The derived CallAfterInit binds the state bridge
    first and then calls this method, which re-supplies the now-valid refs to

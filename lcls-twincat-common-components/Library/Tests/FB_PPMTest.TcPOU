@@ -127,15 +127,15 @@ AssertTrue(
 VAR_INPUT
     iTempC : INT;
 END_VAR
-VAR
-    ptr : POINTER TO INT;
-END_VAR]]></Declaration>
+]]></Declaration>
       <Implementation>
-        <ST><![CDATA[ptr  := ADR(fbPPM.fbYagTempSensor.iRaw);
-ptr^ := iTempC * 10;
+        <ST><![CDATA[fbPPM.fbYagTempSensor.SetRawCounts(
+    Counts := iTempC * 10
+);
 
-ptr  := ADR(fbPPM.fbPowerMeter.fbTempSensor.iRaw);
-ptr^ := iTempC * 10;]]></ST>
+fbPPM.fbPowerMeter.fbTempSensor.SetRawCounts(
+    Counts := iTempC * 10
+);]]></ST>
       </Implementation>
     </Method>
     <Method Name="TestStateMove" Id="{6d196413-6cf3-4cc4-b625-5ae4ecbdc9a3}">

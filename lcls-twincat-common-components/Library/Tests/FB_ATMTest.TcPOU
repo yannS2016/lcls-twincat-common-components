@@ -147,12 +147,11 @@ bFileReaderError := FALSE;
 VAR_INPUT
     iTempC : INT;
 END_VAR
-VAR
-    ptr : POINTER TO INT;
-END_VAR]]></Declaration>
+]]></Declaration>
       <Implementation>
-        <ST><![CDATA[ptr  := ADR(fbATM.fbTempSensor1.iRaw);
-ptr^ := iTempC * 10;]]></ST>
+        <ST><![CDATA[fbATM.fbTempSensor1.SetRawCounts(
+    Counts := iTempC * 10
+);]]></ST>
       </Implementation>
     </Method>
     <Method Name="TestStateMove" Id="{7b7c37f1-d7db-42bb-948f-8b077a7ccce7}">

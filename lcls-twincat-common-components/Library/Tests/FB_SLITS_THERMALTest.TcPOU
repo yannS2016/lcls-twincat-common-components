@@ -137,34 +137,39 @@ AssertTrue(
 VAR_INPUT
     iTempC : INT;
 END_VAR
-VAR
-    ptr : POINTER TO INT;
-END_VAR
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[ptr  := ADR(fbSlitsThermal.RTD_TOP_1.iRaw);
-ptr^ := iTempC * 10;
+        <ST><![CDATA[fbSlitsThermal.RTD_TOP_1.SetRawCounts(
+    Counts := iTempC * 10
+);
 
-ptr  := ADR(fbSlitsThermal.RTD_TOP_2.iRaw);
-ptr^ := iTempC * 10;
+fbSlitsThermal.RTD_TOP_2.SetRawCounts(
+    Counts := iTempC * 10
+);
 
-ptr  := ADR(fbSlitsThermal.RTD_Bottom_1.iRaw);
-ptr^ := iTempC * 10;
+fbSlitsThermal.RTD_Bottom_1.SetRawCounts(
+    Counts := iTempC * 10
+);
 
-ptr  := ADR(fbSlitsThermal.RTD_Bottom_2.iRaw);
-ptr^ := iTempC * 10;
+fbSlitsThermal.RTD_Bottom_2.SetRawCounts(
+    Counts := iTempC * 10
+);
 
-ptr  := ADR(fbSlitsThermal.RTD_North_1.iRaw);
-ptr^ := iTempC * 10;
+fbSlitsThermal.RTD_North_1.SetRawCounts(
+    Counts := iTempC * 10
+);
 
-ptr  := ADR(fbSlitsThermal.RTD_North_2.iRaw);
-ptr^ := iTempC * 10;
+fbSlitsThermal.RTD_North_2.SetRawCounts(
+    Counts := iTempC * 10
+);
 
-ptr  := ADR(fbSlitsThermal.RTD_South_1.iRaw);
-ptr^ := iTempC * 10;
+fbSlitsThermal.RTD_South_1.SetRawCounts(
+    Counts := iTempC * 10
+);
 
-ptr  := ADR(fbSlitsThermal.RTD_South_2.iRaw);
-ptr^ := iTempC * 10;
+fbSlitsThermal.RTD_South_2.SetRawCounts(
+    Counts := iTempC * 10
+);
 ]]></ST>
       </Implementation>
     </Method>

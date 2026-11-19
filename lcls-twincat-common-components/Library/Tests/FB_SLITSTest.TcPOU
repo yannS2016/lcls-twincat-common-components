@@ -69,14 +69,12 @@ AssertTrue(fbSlits.FFO.i_xOK = bExpectOk, sMessage);
    value while the bridge is down or the reading is NaN/Inf. *)
 METHOD TestCheckPMPS
 VAR
-    dwBits : DWORD;
-    pReal  : POINTER TO REAL;
+    uBits : U_TestRealBits;
 END_VAR
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[TEST('TestSlitsCheckPMPS');
 
-pReal := ADR(dwBits);
 fbSlits.bBridgeOK := TRUE;
 
 CheckCase(20.0,    20.0,    10.0, 10.0, TRUE,  'both gaps above the PMPS aperture clears the fault');
@@ -94,8 +92,8 @@ fbSlits.bBridgeOK := TRUE;
 CheckCase(20.0, 20.0, 100.0, 100.0, FALSE, 'bridge back, the new PMPS aperture applies');
 
 // NaN width with a healthy bridge: the last good width (100.0) is kept.
-dwBits := 16#7FC00000;
-CheckCase(20.0, 200.0, pReal^, 100.0, FALSE, 'NaN PMPS width keeps the last good width');
+uBits.dwBits := 16#7FC00000;
+CheckCase(20.0, 200.0, uBits.rValue, 100.0, FALSE, 'NaN PMPS width keeps the last good width');
 
 TEST_FINISHED();
 ]]></ST>

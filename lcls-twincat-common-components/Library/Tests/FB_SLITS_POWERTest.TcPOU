@@ -156,14 +156,12 @@ END_IF
 *)
 METHOD TestAptNonFinite
 VAR
-    dwBits  : DWORD;
-    pReal   : POINTER TO REAL;
+    uBits : U_TestRealBits;
 END_VAR
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[TEST('TestSlitsAptNonFinite');
 
-pReal := ADR(dwBits);
 
 // Establish a trusted limit.
 fbSlitsPower.bBridgeOK := TRUE;
@@ -175,21 +173,21 @@ AssertTrue(
 );
 
 // NaN width: trusted flags stay TRUE but the limit holds.
-dwBits := 16#7FC00000;
-fbSlitsPower.SetAptRequest(Width := pReal^, Height := 40.0, xOK := TRUE);
+uBits.dwBits := 16#7FC00000;
+fbSlitsPower.SetAptRequest(Width := uBits.rValue, Height := 40.0, xOK := TRUE);
 fbSlitsPower.M_UpdateAptTrust();
 AssertTrue(fbSlitsPower.rTrustedAptWidth = 50.0, 'NaN width keeps the last trusted width');
 AssertTrue(fbSlitsPower.rTrustedAptHeight = 40.0, 'NaN width leaves the trusted height alone');
 
 // +Inf width.
-dwBits := 16#7F800000;
-fbSlitsPower.SetAptRequest(Width := pReal^, Height := 40.0, xOK := TRUE);
+uBits.dwBits := 16#7F800000;
+fbSlitsPower.SetAptRequest(Width := uBits.rValue, Height := 40.0, xOK := TRUE);
 fbSlitsPower.M_UpdateAptTrust();
 AssertTrue(fbSlitsPower.rTrustedAptWidth = 50.0, '+Inf width keeps the last trusted width');
 
 // -Inf height.
-dwBits := 16#FF800000;
-fbSlitsPower.SetAptRequest(Width := 50.0, Height := pReal^, xOK := TRUE);
+uBits.dwBits := 16#FF800000;
+fbSlitsPower.SetAptRequest(Width := 50.0, Height := uBits.rValue, xOK := TRUE);
 fbSlitsPower.M_UpdateAptTrust();
 AssertTrue(fbSlitsPower.rTrustedAptHeight = 40.0, '-Inf height keeps the last trusted height');
 

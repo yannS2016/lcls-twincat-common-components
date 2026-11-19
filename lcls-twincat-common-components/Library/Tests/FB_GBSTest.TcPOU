@@ -157,15 +157,15 @@ AssertTrue(
 VAR_INPUT
     iTempC : INT;
 END_VAR
-VAR
-    ptr : POINTER TO INT;
-END_VAR]]></Declaration>
+]]></Declaration>
       <Implementation>
-        <ST><![CDATA[ptr  := ADR(fbGBS.fbRTD1.iRaw);
-ptr^ := iTempC * 10;
+        <ST><![CDATA[fbGBS.fbRTD1.SetRawCounts(
+    Counts := iTempC * 10
+);
 
-ptr  := ADR(fbGBS.fbRTD2.iRaw);
-ptr^ := iTempC * 10;]]></ST>
+fbGBS.fbRTD2.SetRawCounts(
+    Counts := iTempC * 10
+);]]></ST>
       </Implementation>
     </Method>
     <Method Name="TestStateMove" Id="{2c4e0000-0000-0000-0000-000000000002}">

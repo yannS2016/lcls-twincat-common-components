@@ -55,42 +55,18 @@ END_VAR]]></Declaration>
     <Implementation>
       <ST><![CDATA[SUPER^();]]></ST>
     </Implementation>
-    <Method Name="FB_Init" Id="{4d59ebc2-c21f-4355-9b6d-75854f0da2d1}">
-      <Declaration><![CDATA[(* Repeats the eleven FB_ATM_Core inputs, as a derived FB_Init must, and
-   forwards them to CallAfterInitATM, which provides them to the base, binds
-   the state bridge and wires the states. Runs before any CallAfterInit. *)
-{attribute 'analysis' := '-33'}
-METHOD FB_Init : BOOL
-VAR_INPUT
-    bInitRetains           : BOOL;
-    bInCopyCode            : BOOL;
-    aiMotionStage          : REFERENCE TO ARRAY[1..MotionConstants.MAX_STATE_MOTORS] OF I_MotionStage;
-    astPositionState       : REFERENCE TO ARRAY[1..MotionConstants.MAX_STATE_MOTORS]
-                                            OF ARRAY[1..GeneralConstants.MAX_STATES] OF ST_PositionState;
-    fbFFHWO                : REFERENCE TO FB_HardwareFFOutput;
-    fbArbiter              : REFERENCE TO FB_Arbiter;
-    sDeviceName            : STRING;
-    sTransitionKey         : STRING;
-    bEnableBeamParams      : BOOL;
-    bEnablePositionLimits  : BOOL;
-    bReadDBNow             : BOOL;
-    bFileReaderBusy        : REFERENCE TO BOOL;
-    bFileReaderError       : REFERENCE TO BOOL;
-END_VAR]]></Declaration>
+    <Method Name="CallAfterInit" Id="{2f5a266d-a319-48e1-b797-55a7489c8359}">
+      <Declaration><![CDATA[(* Auto-fired after FB_Init, together with the base CallAfterInit. Binds the
+   state bridge to this FB's enum variables and initializes the states. *)
+{attribute 'call_after_init'}
+METHOD CallAfterInit
+]]></Declaration>
       <Implementation>
-        <ST><![CDATA[THIS^.CallAfterInitATM(
-    aiMotionStage         := aiMotionStage,
-    astPositionState      := astPositionState,
-    fbFFHWO               := fbFFHWO,
-    fbArbiter             := fbArbiter,
-    sDeviceName           := sDeviceName,
-    sTransitionKey        := sTransitionKey,
-    bEnableBeamParams     := bEnableBeamParams,
-    bEnablePositionLimits := bEnablePositionLimits,
-    bReadDBNow            := bReadDBNow,
-    bFileReaderBusy       := bFileReaderBusy,
-    bFileReaderError      := bFileReaderError
-);]]></ST>
+        <ST><![CDATA[SUPER^.eEnumSetRef REF= THIS^.eEnumSet;
+SUPER^.eEnumGetRef REF= THIS^.eEnumGet;
+
+THIS^.InitStateDefaults();
+]]></ST>
       </Implementation>
     </Method>
     <Method Name="CallAfterInitATM" Id="{8a40c3bc-e5b7-47ec-8c6d-2ba5964f68de}">
@@ -131,10 +107,81 @@ SUPER^.bFileReaderError      REF= bFileReaderError;
 
 SUPER^.eEnumSetRef REF= THIS^.eEnumSet;
 SUPER^.eEnumGetRef REF= THIS^.eEnumGet;
-
+// 
 THIS^.InitStateDefaults();
 SUPER^.CallAfterInitCore();
 ]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="EnumGet" Id="{15313ef5-dd3a-44f9-a68a-27060a7cd2ff}">
+      <Declaration><![CDATA[(* Current position state. Read-only; written by the state mover. *)
+PROPERTY EnumGet : E_ATM_States]]></Declaration>
+      <Get Name="Get" Id="{f0b1821b-d1dc-41ec-9f21-f65079e6a42a}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[EnumGet := eEnumGet;]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="EnumSet" Id="{d6867564-423e-4de5-8672-3b648d7df078}">
+      <Declaration><![CDATA[(* Request a new move, e.g. `fbATM.EnumSet := E_ATM_States.TARGET1;`.
+   The state mover consumes and clears the request. *)
+PROPERTY EnumSet : E_ATM_States]]></Declaration>
+      <Get Name="Get" Id="{9fcfe38e-096e-4ba8-8d70-7fd16ad47420}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[EnumSet := eEnumSet;]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{bcf7d591-82dd-413a-95e8-044611b7da05}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[eEnumSet := EnumSet;]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Method Name="FB_Init" Id="{4d59ebc2-c21f-4355-9b6d-75854f0da2d1}">
+      <Declaration><![CDATA[(* Repeats the eleven FB_ATM_Core inputs, as a derived FB_Init must, and
+   forwards them to CallAfterInitATM, which provides them to the base, binds
+   the state bridge and wires the states. Runs before any CallAfterInit. *)
+{attribute 'analysis' := '-33'}
+METHOD FB_Init : BOOL
+VAR_INPUT
+    bInitRetains           : BOOL;
+    bInCopyCode            : BOOL;
+    aiMotionStage          : REFERENCE TO ARRAY[1..MotionConstants.MAX_STATE_MOTORS] OF I_MotionStage;
+    astPositionState       : REFERENCE TO ARRAY[1..MotionConstants.MAX_STATE_MOTORS]
+                                            OF ARRAY[1..GeneralConstants.MAX_STATES] OF ST_PositionState;
+    fbFFHWO                : REFERENCE TO FB_HardwareFFOutput;
+    fbArbiter              : REFERENCE TO FB_Arbiter;
+    sDeviceName            : STRING;
+    sTransitionKey         : STRING;
+    bEnableBeamParams      : BOOL;
+    bEnablePositionLimits  : BOOL;
+    bReadDBNow             : BOOL;
+    bFileReaderBusy        : REFERENCE TO BOOL;
+    bFileReaderError       : REFERENCE TO BOOL;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[THIS^.CallAfterInitATM(
+    aiMotionStage         := aiMotionStage,
+    astPositionState      := astPositionState,
+    fbFFHWO               := fbFFHWO,
+    fbArbiter             := fbArbiter,
+    sDeviceName           := sDeviceName,
+    sTransitionKey        := sTransitionKey,
+    bEnableBeamParams     := bEnableBeamParams,
+    bEnablePositionLimits := bEnablePositionLimits,
+    bReadDBNow            := bReadDBNow,
+    bFileReaderBusy       := bFileReaderBusy,
+    bFileReaderError      := bFileReaderError
+);]]></ST>
       </Implementation>
     </Method>
     <Method Name="InitStateDefaults" Id="{373c20ba-9556-4e57-8253-77c7553df9bd}">
@@ -174,52 +221,5 @@ afbStateDefaults[6].CallAfterInit(
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="CallAfterInit" Id="{2f5a266d-a319-48e1-b797-55a7489c8359}">
-      <Declaration><![CDATA[(* Auto-fired after FB_Init, together with the base CallAfterInit. Binds the
-   state bridge to this FB's enum variables and initializes the states. *)
-{attribute 'call_after_init'}
-METHOD CallAfterInit
-]]></Declaration>
-      <Implementation>
-        <ST><![CDATA[SUPER^.eEnumSetRef REF= THIS^.eEnumSet;
-SUPER^.eEnumGetRef REF= THIS^.eEnumGet;
-
-THIS^.InitStateDefaults();
-]]></ST>
-      </Implementation>
-    </Method>
-    <Property Name="EnumGet" Id="{15313ef5-dd3a-44f9-a68a-27060a7cd2ff}">
-      <Declaration><![CDATA[(* Current position state. Read-only; written by the state mover. *)
-PROPERTY EnumGet : E_ATM_States]]></Declaration>
-      <Get Name="Get" Id="{f0b1821b-d1dc-41ec-9f21-f65079e6a42a}">
-        <Declaration><![CDATA[VAR
-END_VAR
-]]></Declaration>
-        <Implementation>
-          <ST><![CDATA[EnumGet := eEnumGet;]]></ST>
-        </Implementation>
-      </Get>
-    </Property>
-    <Property Name="EnumSet" Id="{d6867564-423e-4de5-8672-3b648d7df078}">
-      <Declaration><![CDATA[(* Request a new move, e.g. `fbATM.EnumSet := E_ATM_States.TARGET1;`.
-   The state mover consumes and clears the request. *)
-PROPERTY EnumSet : E_ATM_States]]></Declaration>
-      <Get Name="Get" Id="{9fcfe38e-096e-4ba8-8d70-7fd16ad47420}">
-        <Declaration><![CDATA[VAR
-END_VAR
-]]></Declaration>
-        <Implementation>
-          <ST><![CDATA[EnumSet := eEnumSet;]]></ST>
-        </Implementation>
-      </Get>
-      <Set Name="Set" Id="{bcf7d591-82dd-413a-95e8-044611b7da05}">
-        <Declaration><![CDATA[VAR
-END_VAR
-]]></Declaration>
-        <Implementation>
-          <ST><![CDATA[eEnumSet := EnumSet;]]></ST>
-        </Implementation>
-      </Set>
-    </Property>
   </POU>
 </TcPlcObject>

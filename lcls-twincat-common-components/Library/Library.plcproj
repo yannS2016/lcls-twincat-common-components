@@ -185,6 +185,9 @@
     <Compile Include="POUs\FB_XTES_Flowswitch.TcPOU">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="PRGTask.TcTTO">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Tests\FB_ATMTest.TcPOU">
       <SubType>Code</SubType>
     </Compile>
@@ -322,7 +325,7 @@
   </ItemGroup>
   <ItemGroup>
     <PlaceholderResolution Include="LCLS General">
-      <Resolution>LCLS General, * (SLAC)</Resolution>
+      <Resolution>LCLS General, 2.12.0 (SLAC)</Resolution>
     </PlaceholderResolution>
     <PlaceholderResolution Include="lcls-twincat-physics">
       <Resolution>lcls-twincat-physics, * (SLAC)</Resolution>

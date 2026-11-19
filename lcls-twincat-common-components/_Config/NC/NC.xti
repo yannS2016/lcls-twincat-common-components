@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<TcSmItem xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.beckhoff.com/schemas/2012/07/TcSmProject" TcSmVersion="1.0" TcVersion="3.1.4026.17" ClassName="CNcSafTaskDef" SubType="0">
+<TcSmItem xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.beckhoff.com/schemas/2012/07/TcSmProject" TcSmVersion="1.0" TcVersion="3.1.4026.17" ClassName="CNcSafTaskDef" SubType="0" TcProjectVariant="UnitTest">
 	<NC>
 		<SafTask Priority="4" CycleTime="20000" AmsPort="501" IoAtBegin="true" SafTaskInfo="256">
 			<Name>NC-Task 1 SAF</Name>
@@ -16,8 +16,11 @@
 		<SvbTask Priority="8" CycleTime="100000" AmsPort="511">
 			<Name>NC-Task 1 SVB</Name>
 		</SvbTask>
+		<AxisFolder Name="UnitTests"/>
+		<AxisFolder Name="PRG"/>
 		<Axis File="IPM_Y.xti" Id="13"/>
 		<Axis File="GBS_Y.xti" Id="12"/>
+		<Axis File="ATM_X.xti" Id="18"/>
 		<Axis File="ATM_Y.xti" Id="1"/>
 		<Axis File="LIC_Y.xti" Id="2"/>
 		<Axis File="PPM_Y.xti" Id="3"/>
@@ -31,5 +34,7 @@
 		<Axis File="SLIT_Top.xti" Id="8"/>
 		<Axis File="KBO_Y.xti" Id="14"/>
 		<Axis File="COATING_Y.xti" Id="15"/>
+		<Axis File="PRG_ATM_X.xti" Id="17"/>
+		<Axis File="PRG_ATM_Y.xti" Id="16"/>
 	</NC>
 </TcSmItem>

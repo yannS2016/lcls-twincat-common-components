@@ -3,8 +3,6 @@
   <POU Name="FB_ATMTest" Id="{7b7c37ef-d7db-42bb-948f-8b077a7ccce5}" SpecialFunc="None">
     <Declaration><![CDATA[FUNCTION_BLOCK FB_ATMTest EXTENDS FB_TestSuite
 VAR
-    (* Caller-owned axis, persistent storage, and Y motor.
-       In a real PRG the AxisRef would come from MAIN.Mxx. *)
     axRef    : ARRAY[1..2] OF AXIS_REF;
     fbPDS    : LCLS_Tc_DevAbs.FB_PersistentDataStorage;
     // X motor (align target to beam)

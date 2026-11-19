@@ -25,7 +25,7 @@ VAR
     fbArbiter  : FB_Arbiter(1);
 
     fbStandardPMPSDB : FB_Standard_PMPSDB(
-        sPlcName   := 'plc-cc-library-test',
+        sPlcName   := 'plc-cc-motion',
         sDirectory := '/home/ecs-user/pmpsdb/',
         io_fbFFHWO := fbFFHWO
     );

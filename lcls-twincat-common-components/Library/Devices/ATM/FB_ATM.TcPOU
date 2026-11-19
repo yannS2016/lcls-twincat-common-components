@@ -58,27 +58,35 @@ END_VAR]]></Declaration>
     <Method Name="CallAfterInit" Id="{2f5a266d-a319-48e1-b797-55a7489c8359}">
       <Declaration><![CDATA[(* Auto-fired after FB_Init. Binds the base's UINT state bridge to
    eEnumSet and eEnumGet, writes the per-state defaults, then runs the base
-   CallAfterInit, which wires fbStates. The bridge goes through UINT pointers
-   because the base references are typed UINT. *)
+   CallAfterInit, which wires fbStates. The bridge goes
+   through BindStateBridge, whose inputs are REFERENCE TO UINT. *)
 {attribute 'call_after_init'}
 METHOD CallAfterInit
-VAR
-    pEnumSet : POINTER TO UINT;
-    pEnumGet : POINTER TO UINT;
-END_VAR
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[pEnumSet := ADR(THIS^.eEnumSet);
-pEnumGet := ADR(THIS^.eEnumGet);
-THIS^.eEnumSetRef REF= pEnumSet^;
-THIS^.eEnumGetRef REF= pEnumGet^;
+        <ST><![CDATA[SUPER^.BindStateBridge(
+    eEnumSet := THIS^.eEnumSet,
+    eEnumGet := THIS^.eEnumGet
+);
 
-afbStateDefaults[1].CallAfterInit(stPositionState := THIS^.astPositionState[1][E_ATM_States.OUT]);
-afbStateDefaults[2].CallAfterInit(stPositionState := THIS^.astPositionState[1][E_ATM_States.TARGET1]);
-afbStateDefaults[3].CallAfterInit(stPositionState := THIS^.astPositionState[1][E_ATM_States.TARGET2]);
-afbStateDefaults[4].CallAfterInit(stPositionState := THIS^.astPositionState[1][E_ATM_States.TARGET3]);
-afbStateDefaults[5].CallAfterInit(stPositionState := THIS^.astPositionState[1][E_ATM_States.TARGET4]);
-afbStateDefaults[6].CallAfterInit(stPositionState := THIS^.astPositionState[1][E_ATM_States.TARGET5]);
+afbStateDefaults[1].CallAfterInit(
+    stPositionState := THIS^.astPositionState[1][E_ATM_States.OUT]
+);
+afbStateDefaults[2].CallAfterInit(
+    stPositionState := THIS^.astPositionState[1][E_ATM_States.TARGET1]
+);
+afbStateDefaults[3].CallAfterInit(
+    stPositionState := THIS^.astPositionState[1][E_ATM_States.TARGET2]
+);
+afbStateDefaults[4].CallAfterInit(
+    stPositionState := THIS^.astPositionState[1][E_ATM_States.TARGET3]
+);
+afbStateDefaults[5].CallAfterInit(
+    stPositionState := THIS^.astPositionState[1][E_ATM_States.TARGET4]
+);
+afbStateDefaults[6].CallAfterInit(
+    stPositionState := THIS^.astPositionState[1][E_ATM_States.TARGET5]
+);
 
 SUPER^.CallAfterInit();
 ]]></ST>

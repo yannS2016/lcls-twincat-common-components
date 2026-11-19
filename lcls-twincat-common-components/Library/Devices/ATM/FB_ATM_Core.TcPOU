@@ -98,7 +98,9 @@ END_VAR]]></Declaration>
     RETURN;
 END_IF
 
-fbStates(stDbStateParams=> stDbStateParams);
+fbStates(
+    stDbStateParams => stDbStateParams
+);
 
 (* In-beam thermocouple: only faults when something is actually in the
    beam (i.e. not OUT). Driven by the PMPS DB temp setpoint. *)
@@ -111,6 +113,23 @@ fbTempSensor1(
 
 fbFlowMeter();]]></ST>
     </Implementation>
+    <Method Name="BindStateBridge" Id="{c2ee8d04-a9c9-45f5-92a7-21fa86adb172}">
+      <Declaration><![CDATA[(* Binds the state bridge to the derived type's enum variables. A derived
+   CallAfterInit calls this first. The inputs are REFERENCE TO UINT, so the
+   derived enum variables (UINT base) pass in directly, the same way they pass
+   to FB_PositionStatePMPSND. *)
+METHOD BindStateBridge
+VAR_INPUT
+    eEnumSet : REFERENCE TO UINT;
+    eEnumGet : REFERENCE TO UINT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[THIS^.eEnumSetRef REF= eEnumSet;
+THIS^.eEnumGetRef REF= eEnumGet;
+]]></ST>
+      </Implementation>
+    </Method>
     <Method Name="CallAfterInit" Id="{a97fcae5-1420-4268-8023-befe115b659f}">
       <Declaration><![CDATA[(* Auto-fired after FB_Init. The derived CallAfterInit binds the state bridge
    first and then calls this method, which re-supplies the now-valid refs to

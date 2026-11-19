@@ -1144,23 +1144,23 @@ External Setpoint Generation:
 					<Type>DINT</Type>
 				</Var>
 				<Var>
-					<Name>PRG_ATMInit.fbATM.fbTempSensor1.bError</Name>
+					<Name>PRG_ATMInit.fbHost.fbATM.fbTempSensor1.bError</Name>
 					<Type>BOOL</Type>
 				</Var>
 				<Var>
-					<Name>PRG_ATMInit.fbATM.fbTempSensor1.bUnderrange</Name>
+					<Name>PRG_ATMInit.fbHost.fbATM.fbTempSensor1.bUnderrange</Name>
 					<Type>BOOL</Type>
 				</Var>
 				<Var>
-					<Name>PRG_ATMInit.fbATM.fbTempSensor1.bOverrange</Name>
+					<Name>PRG_ATMInit.fbHost.fbATM.fbTempSensor1.bOverrange</Name>
 					<Type>BOOL</Type>
 				</Var>
 				<Var>
-					<Name>PRG_ATMInit.fbATM.fbTempSensor1.iRaw</Name>
+					<Name>PRG_ATMInit.fbHost.fbATM.fbTempSensor1.iRaw</Name>
 					<Type>INT</Type>
 				</Var>
 				<Var>
-					<Name>PRG_ATMInit.fbATM.fbFlowMeter.iRaw</Name>
+					<Name>PRG_ATMInit.fbHost.fbATM.fbFlowMeter.iRaw</Name>
 					<Comment><![CDATA[ Connect this input to the terminal]]></Comment>
 					<Type>DINT</Type>
 				</Var>

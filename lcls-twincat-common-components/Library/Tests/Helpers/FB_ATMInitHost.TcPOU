@@ -43,7 +43,8 @@ VAR
 END_VAR
 ]]></Declaration>
     <Implementation>
-      <ST><![CDATA[]]></ST>
+      <ST><![CDATA[fbATM();
+]]></ST>
     </Implementation>
     <Method Name="CallAfterInit" Id="{69049f69-7b85-471f-984b-eb2e5edfc54d}">
       <Declaration><![CDATA[(* The nested fbATM ran its own CallAfterInit before this one, with nil

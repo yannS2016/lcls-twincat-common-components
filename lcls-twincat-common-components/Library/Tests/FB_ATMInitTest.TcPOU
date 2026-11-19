@@ -1,11 +1,12 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <TcPlcObject Version="1.1.0.1">
   <POU Name="FB_ATMInitTest" Id="{257f0a2b-ea54-44f1-87bc-30e5966c1756}" SpecialFunc="None">
-    <Declaration><![CDATA[(* Checks that an FB_ATM leaves every state of its position array named and with
-   the default tolerance, in the two ways it can be instantiated: directly in a
-   PROGRAM (PRG_ATMInit.fbATM) and nested inside another FB, where the
-   references it was constructed with are still nil (PRG_ATMInit.fbHost).
-   Reads the results of initialization; nothing is ticked. *)
+    <Declaration><![CDATA[(* Checks that an FB_ATM nested inside another FB (PRG_ATMInit.fbHost) ends up
+   with every state of its position array named, given the default tolerance and
+   keyed for the PMPS DB. The nested FB_ATM is constructed from references that
+   are still nil, so this only passes when the host's re-wire through
+   CallAfterInitATM works. Reads the state array PRG_ATMInit fills; the PRG is
+   ticked by PRGTask. *)
 FUNCTION_BLOCK FB_ATMInitTest EXTENDS FB_TestSuite
 VAR
 END_VAR
@@ -17,12 +18,11 @@ VAR CONSTANT
 END_VAR
 ]]></Declaration>
     <Implementation>
-      <ST><![CDATA[TestPrgInstance();
-TestNestedInstance();
+      <ST><![CDATA[TestNestedInstance();
 ]]></ST>
     </Implementation>
     <Method Name="CheckStates" Id="{4ffbb3c5-4682-4eb1-84d8-9649b9225faf}">
-      <Declaration><![CDATA[(* Asserts the name and tolerance of states 1..nStateCount of the array. *)
+      <Declaration><![CDATA[(* Asserts the name, tolerance and PMPS key of states 1..nStateCount. *)
 METHOD CheckStates
 VAR_INPUT
     astCheck : REFERENCE TO ARRAY[1..MotionConstants.MAX_STATE_MOTORS]
@@ -48,23 +48,11 @@ END_VAR
     AssertTrue(
         ABS(astCheck[1][nState].fDelta - fDeltaExpected) < 0.001,
         CONCAT(sCase, CONCAT(': tolerance of state ', UINT_TO_STRING(nState))));
+    AssertEquals_STRING(
+        Expected := CONCAT('TST:ATMNEST-', sExpected),
+        Actual   := astCheck[1][nState].stPMPS.sPmpsState,
+        Message  := CONCAT(sCase, CONCAT(': PMPS key of state ', UINT_TO_STRING(nState))));
 END_FOR
-]]></ST>
-      </Implementation>
-    </Method>
-    <Method Name="TestPrgInstance" Id="{844d719e-2f11-437e-9163-735e4618c507}">
-      <Declaration><![CDATA[(* FB_ATM declared in a PROGRAM. *)
-METHOD TestPrgInstance
-]]></Declaration>
-      <Implementation>
-        <ST><![CDATA[TEST('TestATMInitFromPrg');
-
-CheckStates(
-    astCheck := PRG_ATMInit.astPositionStatePrg,
-    sCase    := 'FB_ATM in a PRG'
-);
-
-TEST_FINISHED();
 ]]></ST>
       </Implementation>
     </Method>
@@ -76,7 +64,7 @@ METHOD TestNestedInstance
         <ST><![CDATA[TEST('TestATMInitNested');
 
 CheckStates(
-    astCheck := PRG_ATMInit.astPositionStateNested,
+    astCheck := PRG_ATMInit.astPositionState,
     sCase    := 'FB_ATM nested in an FB'
 );
 

@@ -69,7 +69,8 @@ VAR
         bEnablePositionLimits := TRUE,
         bReadDBNow := FALSE,
         bFileReaderBusy       := bFileReaderBusy,
-        bFileReaderError      := bFileReaderError
+        bFileReaderError      := bFileReaderError,
+        fTermMax              := 200
     );
 
     fbTestTimer : TON := (IN := TRUE, PT := T#60S);

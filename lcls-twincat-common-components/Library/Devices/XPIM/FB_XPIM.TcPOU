@@ -112,7 +112,7 @@ SUPER^.stEl6Out              REF= stEl6Out;
 
 SUPER^.eEnumSetRef REF= THIS^.eEnumSet;
 SUPER^.eEnumGetRef REF= THIS^.eEnumGet;
-// 
+//
 THIS^.InitStateDefaults();
 SUPER^.CallAfterInitCore();
 ]]></ST>
@@ -224,34 +224,5 @@ afbStateDefaults[4].CallAfterInit(
 ]]></ST>
       </Implementation>
     </Method>
-    <LineIds Name="FB_XPIM">
-      <LineId Id="3" Count="3" />
-      <LineId Id="2" Count="0" />
-    </LineIds>
-    <LineIds Name="FB_XPIM.CallAfterInit">
-      <LineId Id="3" Count="3" />
-      <LineId Id="2" Count="0" />
-    </LineIds>
-    <LineIds Name="FB_XPIM.CallAfterInitXPIM">
-      <LineId Id="3" Count="18" />
-      <LineId Id="2" Count="0" />
-    </LineIds>
-    <LineIds Name="FB_XPIM.EnumGet.Get">
-      <LineId Id="2" Count="0" />
-    </LineIds>
-    <LineIds Name="FB_XPIM.EnumSet.Get">
-      <LineId Id="2" Count="0" />
-    </LineIds>
-    <LineIds Name="FB_XPIM.EnumSet.Set">
-      <LineId Id="2" Count="0" />
-    </LineIds>
-    <LineIds Name="FB_XPIM.FB_Init">
-      <LineId Id="3" Count="13" />
-      <LineId Id="2" Count="0" />
-    </LineIds>
-    <LineIds Name="FB_XPIM.InitStateDefaults">
-      <LineId Id="3" Count="15" />
-      <LineId Id="2" Count="0" />
-    </LineIds>
   </POU>
 </TcPlcObject>

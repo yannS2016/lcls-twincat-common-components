@@ -107,7 +107,7 @@ SUPER^.bFileReaderError      REF= bFileReaderError;
 
 SUPER^.eEnumSetRef REF= THIS^.eEnumSet;
 SUPER^.eEnumGetRef REF= THIS^.eEnumGet;
-// 
+//
 THIS^.InitStateDefaults();
 SUPER^.CallAfterInitCore();
 ]]></ST>

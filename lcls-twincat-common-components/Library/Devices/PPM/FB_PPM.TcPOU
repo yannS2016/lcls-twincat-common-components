@@ -135,7 +135,7 @@ SUPER^.bFileReaderError      REF= bFileReaderError;
 
 SUPER^.eEnumSetRef REF= THIS^.eEnumSet;
 SUPER^.eEnumGetRef REF= THIS^.eEnumGet;
-// 
+//
 THIS^.InitStateDefaults();
 SUPER^.CallAfterInitCore();
 
@@ -258,34 +258,5 @@ afbStateDefaults[4].CallAfterInit(
 ]]></ST>
       </Implementation>
     </Method>
-    <LineIds Name="FB_PPM">
-      <LineId Id="3" Count="15" />
-      <LineId Id="2" Count="0" />
-    </LineIds>
-    <LineIds Name="FB_PPM.CallAfterInit">
-      <LineId Id="3" Count="3" />
-      <LineId Id="2" Count="0" />
-    </LineIds>
-    <LineIds Name="FB_PPM.CallAfterInitPPM">
-      <LineId Id="3" Count="23" />
-      <LineId Id="2" Count="0" />
-    </LineIds>
-    <LineIds Name="FB_PPM.EnumGet.Get">
-      <LineId Id="2" Count="0" />
-    </LineIds>
-    <LineIds Name="FB_PPM.EnumSet.Get">
-      <LineId Id="2" Count="0" />
-    </LineIds>
-    <LineIds Name="FB_PPM.EnumSet.Set">
-      <LineId Id="2" Count="0" />
-    </LineIds>
-    <LineIds Name="FB_PPM.FB_Init">
-      <LineId Id="3" Count="16" />
-      <LineId Id="2" Count="0" />
-    </LineIds>
-    <LineIds Name="FB_PPM.InitStateDefaults">
-      <LineId Id="3" Count="15" />
-      <LineId Id="2" Count="0" />
-    </LineIds>
   </POU>
 </TcPlcObject>

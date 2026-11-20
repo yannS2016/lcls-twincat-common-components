@@ -107,7 +107,7 @@ SUPER^.bFileReaderError      REF= bFileReaderError;
 
 SUPER^.eEnumSetRef REF= THIS^.eEnumSet;
 SUPER^.eEnumGetRef REF= THIS^.eEnumGet;
-// 
+//
 THIS^.InitStateDefaults();
 SUPER^.CallAfterInitCore();
 ]]></ST>
@@ -221,33 +221,5 @@ afbStateDefaults[6].CallAfterInit(
 ]]></ST>
       </Implementation>
     </Method>
-    <LineIds Name="FB_WFS">
-      <LineId Id="2" Count="0" />
-    </LineIds>
-    <LineIds Name="FB_WFS.CallAfterInit">
-      <LineId Id="3" Count="3" />
-      <LineId Id="2" Count="0" />
-    </LineIds>
-    <LineIds Name="FB_WFS.CallAfterInitWFS">
-      <LineId Id="3" Count="16" />
-      <LineId Id="2" Count="0" />
-    </LineIds>
-    <LineIds Name="FB_WFS.EnumGet.Get">
-      <LineId Id="2" Count="0" />
-    </LineIds>
-    <LineIds Name="FB_WFS.EnumSet.Get">
-      <LineId Id="2" Count="0" />
-    </LineIds>
-    <LineIds Name="FB_WFS.EnumSet.Set">
-      <LineId Id="2" Count="0" />
-    </LineIds>
-    <LineIds Name="FB_WFS.FB_Init">
-      <LineId Id="3" Count="11" />
-      <LineId Id="2" Count="0" />
-    </LineIds>
-    <LineIds Name="FB_WFS.InitStateDefaults">
-      <LineId Id="3" Count="21" />
-      <LineId Id="2" Count="0" />
-    </LineIds>
   </POU>
 </TcPlcObject>

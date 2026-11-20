@@ -9,7 +9,7 @@
    declaration initialisers run. The PMPS DB is plc-cc-motion.json. *)
 PROGRAM PRG_WFSInit
 VAR
-	{attribute 'TcNcAxis' := 'PRG_WFS_Y'}
+    {attribute 'TcNcAxis' := 'PRG_WFS_Y'}
     axRef         : AXIS_REF;
     fbMotor       : FB_MotionStageNC(
         AxisRef                := axRef,

@@ -119,7 +119,7 @@ SUPER^.bFileReaderError      REF= bFileReaderError;
 
 SUPER^.eEnumSetRef REF= THIS^.eEnumSet;
 SUPER^.eEnumGetRef REF= THIS^.eEnumGet;
-// 
+//
 THIS^.InitStateDefaults();
 SUPER^.CallAfterInitCore();
 ]]></ST>
@@ -245,33 +245,5 @@ afbStateDefaults[10].CallAfterInit(
 ]]></ST>
       </Implementation>
     </Method>
-    <LineIds Name="FB_GBS">
-      <LineId Id="2" Count="0" />
-    </LineIds>
-    <LineIds Name="FB_GBS.CallAfterInit">
-      <LineId Id="3" Count="3" />
-      <LineId Id="2" Count="0" />
-    </LineIds>
-    <LineIds Name="FB_GBS.CallAfterInitGBS">
-      <LineId Id="3" Count="16" />
-      <LineId Id="2" Count="0" />
-    </LineIds>
-    <LineIds Name="FB_GBS.EnumGet.Get">
-      <LineId Id="2" Count="0" />
-    </LineIds>
-    <LineIds Name="FB_GBS.EnumSet.Get">
-      <LineId Id="2" Count="0" />
-    </LineIds>
-    <LineIds Name="FB_GBS.EnumSet.Set">
-      <LineId Id="2" Count="0" />
-    </LineIds>
-    <LineIds Name="FB_GBS.FB_Init">
-      <LineId Id="3" Count="11" />
-      <LineId Id="2" Count="0" />
-    </LineIds>
-    <LineIds Name="FB_GBS.InitStateDefaults">
-      <LineId Id="3" Count="33" />
-      <LineId Id="2" Count="0" />
-    </LineIds>
   </POU>
 </TcPlcObject>

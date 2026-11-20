@@ -33,13 +33,9 @@
 		<Axis File="XPIM_F.xti" Id="23"/>
 		<Axis File="XPIM_Z.xti" Id="22"/>
 		<Axis File="XPIM_Y.xti" Id="6"/>
-		<Axis File="SLIT_Bottom_P.xti" Id="32"/>
 		<Axis File="SLIT_Bottom.xti" Id="9"/>
-		<Axis File="SLIT_North_P.xti" Id="33"/>
 		<Axis File="SLIT_North.xti" Id="10"/>
-		<Axis File="SLIT_South_P.xti" Id="35"/>
 		<Axis File="SLIT_South.xti" Id="11"/>
-		<Axis File="SLIT_Top_P.xti" Id="34"/>
 		<Axis File="SLIT_Top.xti" Id="8"/>
 		<Axis File="KBO_Y.xti" Id="14"/>
 		<Axis File="COATING_Y.xti" Id="15"/>

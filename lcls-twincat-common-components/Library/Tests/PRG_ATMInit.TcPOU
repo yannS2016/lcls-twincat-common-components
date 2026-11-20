@@ -9,7 +9,7 @@
    yet when its declaration initialisers run. The PMPS DB is plc-cc-motion.json. *)
 PROGRAM PRG_ATMInit
 VAR
-	{attribute 'TcNcAxis' := 'PRG_ATM_X'}
+    {attribute 'TcNcAxis' := 'PRG_ATM_X'}
     axRef         : AXIS_REF;
     fbMotor       : FB_MotionStageNC(
         AxisRef                := axRef,
@@ -99,9 +99,5 @@ fbHost();
 fbMotor();
 ]]></ST>
     </Implementation>
-    <LineIds Name="PRG_ATMInit">
-      <LineId Id="3" Count="35" />
-      <LineId Id="2" Count="0" />
-    </LineIds>
   </POU>
 </TcPlcObject>

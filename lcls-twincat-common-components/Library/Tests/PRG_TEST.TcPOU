@@ -5,7 +5,7 @@
 PROGRAM PRG_TEST
 VAR
     (* Seeds PMPS_GVL.BP_jsonDoc with the fake test PMPS DB in before any test FB body runs. *)
- 	fbPmpsTestSetup: FB_CC_PMPSTestSetup;
+     fbPmpsTestSetup: FB_CC_PMPSTestSetup;
     {attribute 'TcNcAxis' := '
         .axRef[1] := ATM_X;
         .axRef[2] := ATM_Y
@@ -14,77 +14,63 @@ VAR
     {attribute 'TcNcAxis' := '
         .axRef := GBS_Y;
     '}
-	fbGBSTest: FB_GBSTest;
+    fbGBSTest: FB_GBSTest;
     {attribute 'TcNcAxis' := '
         .axRef[1] := IPM_X;
         .axRef[2] := IPM_Y
     '}
-	fbIPMTest: FB_IPMTest;
+    fbIPMTest: FB_IPMTest;
     {attribute 'TcNcAxis' := '
         .axRef := LIC_Y;
     '}
-	fbLICTest: FB_LICTest;
+    fbLICTest: FB_LICTest;
     {attribute 'TcNcAxis' := '
         .axRef := PPM_Y;
     '}
-	fbPPMTest: FB_PPMTest;
+    fbPPMTest: FB_PPMTest;
     {attribute 'TcNcAxis' := '
         .axRef[1] := REF_X;
         .axRef[2] := REF_Y
     '}
-	fbREFTest: FB_REFTest;
+    fbREFTest: FB_REFTest;
     {attribute 'TcNcAxis' := '
         .axRef := SATT_Y;
     '}
-	fbSATTTest: FB_SATTTest;
+    fbSATTTest: FB_SATTTest;
     {attribute 'TcNcAxis' := '
         .axRef[1] := WFS_Z;
         .axRef[2] := WFS_Y
     '}
-	fbWFSTest: FB_WFSTest;
+    fbWFSTest: FB_WFSTest;
     {attribute 'TcNcAxis' := '
         .axRef[1] := XPIM_Z;
         .axRef[2] := XPIM_F;
         .axRef[3] := XPIM_Y
     '}
-	fbXPIMTest: FB_XPIMTest;
+    fbXPIMTest: FB_XPIMTest;
     {attribute 'TcNcAxis' := '
         .axRef := KBO_Y;
     '}
-	fbKBOTest: FB_KBOTest;
+    fbKBOTest: FB_KBOTest;
     {attribute 'TcNcAxis' := '
         .axRef := COATING_Y;
     '}
-	fbCoatingNoPMPSTest: FB_Coating_States_NoPMPSTest;
-	fbCCTempSensorTest: FB_CC_TempSensorTest;
-//     {attribute 'TcNcAxis' := '
-//         .axRef[1] := SLIT_Top;
-//         .axRef[2] := SLIT_Bottom;
-//         .axRef[3] := SLIT_North;
-//         .axRef[4] := SLIT_South
-//     '}
-// 	fbSlitsTest: FB_SLITSTest;
-//     {attribute 'TcNcAxis' := '
-//         .axRef[1] := SLIT_Top_P;
-//         .axRef[2] := SLIT_Bottom_P;
-//         .axRef[3] := SLIT_North_P;
-//         .axRef[4] := SLIT_South_P
-//     '}
-// 	fbSlitsPowerTest: FB_SLITS_POWERTest;
-	fbSlitsThermalTest: FB_SLITS_THERMALTest;
-
-
-
-
+    fbCoatingNoPMPSTest: FB_Coating_States_NoPMPSTest;
+    fbSlitsTest: FB_SLITSTest;
+    {attribute 'TcNcAxis' := '
+        .axRef[1] := SLIT_Top;
+        .axRef[2] := SLIT_Bottom;
+        .axRef[3] := SLIT_North;
+        .axRef[4] := SLIT_South
+    '}
+    fbSlitsPowerTest: FB_SLITS_POWERTest;
+    fbSlitsThermalTest: FB_SLITS_THERMALTest;
+    fbCCTempSensorTest: FB_CC_TempSensorTest;
 END_VAR
 ]]></Declaration>
     <Implementation>
       <ST><![CDATA[// Run the tests
 TcUnit.RUN();]]></ST>
     </Implementation>
-    <LineIds Name="PRG_TEST">
-      <LineId Id="3" Count="0" />
-      <LineId Id="2" Count="0" />
-    </LineIds>
   </POU>
 </TcPlcObject>

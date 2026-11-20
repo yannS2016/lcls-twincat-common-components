@@ -120,6 +120,12 @@
     <Compile Include="Devices\SATT\FB_SATT_FilterConfig.TcPOU">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Devices\SATT\I_SATTFilters.TcIO">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Devices\SATT\FB_SXR_SATT_Stage_Core.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Devices\SATT\FB_SXR_SATT_Stage.TcPOU">
       <SubType>Code</SubType>
     </Compile>

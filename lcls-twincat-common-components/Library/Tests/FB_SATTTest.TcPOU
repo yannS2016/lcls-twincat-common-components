@@ -55,14 +55,14 @@ VAR
     (* Per-filter material + thickness (integrator-owned) written into
        the device's arrFilters table via FB_SATT_FilterConfig. *)
     afbFilterCfg : ARRAY[1..8] OF FB_SATT_FilterConfig[
-        (stFilter := fbSATT.arrFilters[1], sFilterMaterial := 'C',  fFilterThickness_um := 25),
-        (stFilter := fbSATT.arrFilters[2], sFilterMaterial := 'C',  fFilterThickness_um := 50),
-        (stFilter := fbSATT.arrFilters[3], sFilterMaterial := 'C',  fFilterThickness_um := 100),
-        (stFilter := fbSATT.arrFilters[4], sFilterMaterial := 'Si', fFilterThickness_um := 200),
-        (stFilter := fbSATT.arrFilters[5], sFilterMaterial := 'Si', fFilterThickness_um := 320),
-        (stFilter := fbSATT.arrFilters[6], sFilterMaterial := 'Si', fFilterThickness_um := 640),
-        (stFilter := fbSATT.arrFilters[7], sFilterMaterial := 'Si', fFilterThickness_um := 1280),
-        (stFilter := fbSATT.arrFilters[8], sFilterMaterial := 'Si', fFilterThickness_um := 2560)
+        (iFilters := fbSATT, nIndex := 1, sFilterMaterial := 'C',  fFilterThickness_um := 25),
+        (iFilters := fbSATT, nIndex := 2, sFilterMaterial := 'C',  fFilterThickness_um := 50),
+        (iFilters := fbSATT, nIndex := 3, sFilterMaterial := 'C',  fFilterThickness_um := 100),
+        (iFilters := fbSATT, nIndex := 4, sFilterMaterial := 'Si', fFilterThickness_um := 200),
+        (iFilters := fbSATT, nIndex := 5, sFilterMaterial := 'Si', fFilterThickness_um := 320),
+        (iFilters := fbSATT, nIndex := 6, sFilterMaterial := 'Si', fFilterThickness_um := 640),
+        (iFilters := fbSATT, nIndex := 7, sFilterMaterial := 'Si', fFilterThickness_um := 1280),
+        (iFilters := fbSATT, nIndex := 8, sFilterMaterial := 'Si', fFilterThickness_um := 2560)
     ];
 
     bFirstScan : BOOL := TRUE;

@@ -58,7 +58,8 @@ VAR
     astParams_IPM   : ARRAY[0..5] OF ST_DbStateParams;
     astParams_WFS   : ARRAY[0..6] OF ST_DbStateParams;
     astParams_XPIM  : ARRAY[0..5] OF ST_DbStateParams;
-    astParams_SATT  : ARRAY[0..0] OF ST_DbStateParams;
+    // [0]=RTD key, [1]=OUT, [2..9]=FILTER1..FILTER8
+    astParams_SATT  : ARRAY[0..9] OF ST_DbStateParams;
     astParams_SLITS : ARRAY[0..0] OF ST_DbStateParams;
     // Own device of FB_SLITS_THERMALTest, so it does not share TST:POWER.
     astParams_SLITST : ARRAY[0..0] OF ST_DbStateParams;
@@ -518,9 +519,9 @@ astParams_XPIM[5].stBeamParams.nRate         := 50;
 astParams_XPIM[5].stBeamParams.nTran         := 8;
 astParams_XPIM[5].stBeamParams.nMachineMode  := 1;
 
-(* ---- TST:SATT (single reactive-temp key; the SATT filters are not
-   real PMPS states, so only the RTD reactive-temperature key is
-   seeded). nTempSP is the RTD fault threshold in degC: the SATT temp
+(* ---- TST:SATT (the RTD reactive-temperature key, which the stage reads,
+   plus OUT and FILTER1..FILTER8 so the device holds every state its
+   enum has). nTempSP is the RTD fault threshold in degC: the SATT temp
    FFO test faults at 100degC and clears at 0degC, so any threshold in
    (0, 100) works. *)
 astParams_SATT[0].sPmpsState                 := 'TST:SATT-RTD';
@@ -531,6 +532,87 @@ astParams_SATT[0].stBeamParams.neVRange      := 2#1111_1111_1111_1111_1111_1111_
 astParams_SATT[0].stBeamParams.nRate         := 10;
 astParams_SATT[0].stBeamParams.nTran         := 12;
 astParams_SATT[0].stBeamParams.nMachineMode  := 2;
+
+astParams_SATT[1].sPmpsState                 := 'TST:SATT-OUT';
+astParams_SATT[1].nRequestAssertionID        := 1101;
+astParams_SATT[1].stReactiveParams.nTempSP   := 30;
+astParams_SATT[1].stBeamParams.nBeamClass    := 2#0000_0001;
+astParams_SATT[1].stBeamParams.neVRange      := 2#1111_1111_1111_1111_1111_1111_1111_1111;
+astParams_SATT[1].stBeamParams.nRate         := 10;
+astParams_SATT[1].stBeamParams.nTran         := 12;
+astParams_SATT[1].stBeamParams.nMachineMode  := 2;
+
+astParams_SATT[2].sPmpsState                 := 'TST:SATT-FILTER1';
+astParams_SATT[2].nRequestAssertionID        := 1102;
+astParams_SATT[2].stReactiveParams.nTempSP   := 30;
+astParams_SATT[2].stBeamParams.nBeamClass    := 2#0000_0001;
+astParams_SATT[2].stBeamParams.neVRange      := 2#1111_1111_1111_1111_1111_1111_1111_1111;
+astParams_SATT[2].stBeamParams.nRate         := 10;
+astParams_SATT[2].stBeamParams.nTran         := 12;
+astParams_SATT[2].stBeamParams.nMachineMode  := 2;
+
+astParams_SATT[3].sPmpsState                 := 'TST:SATT-FILTER2';
+astParams_SATT[3].nRequestAssertionID        := 1103;
+astParams_SATT[3].stReactiveParams.nTempSP   := 30;
+astParams_SATT[3].stBeamParams.nBeamClass    := 2#0000_0001;
+astParams_SATT[3].stBeamParams.neVRange      := 2#1111_1111_1111_1111_1111_1111_1111_1111;
+astParams_SATT[3].stBeamParams.nRate         := 10;
+astParams_SATT[3].stBeamParams.nTran         := 12;
+astParams_SATT[3].stBeamParams.nMachineMode  := 2;
+
+astParams_SATT[4].sPmpsState                 := 'TST:SATT-FILTER3';
+astParams_SATT[4].nRequestAssertionID        := 1104;
+astParams_SATT[4].stReactiveParams.nTempSP   := 30;
+astParams_SATT[4].stBeamParams.nBeamClass    := 2#0000_0001;
+astParams_SATT[4].stBeamParams.neVRange      := 2#1111_1111_1111_1111_1111_1111_1111_1111;
+astParams_SATT[4].stBeamParams.nRate         := 10;
+astParams_SATT[4].stBeamParams.nTran         := 12;
+astParams_SATT[4].stBeamParams.nMachineMode  := 2;
+
+astParams_SATT[5].sPmpsState                 := 'TST:SATT-FILTER4';
+astParams_SATT[5].nRequestAssertionID        := 1105;
+astParams_SATT[5].stReactiveParams.nTempSP   := 30;
+astParams_SATT[5].stBeamParams.nBeamClass    := 2#0000_0001;
+astParams_SATT[5].stBeamParams.neVRange      := 2#1111_1111_1111_1111_1111_1111_1111_1111;
+astParams_SATT[5].stBeamParams.nRate         := 10;
+astParams_SATT[5].stBeamParams.nTran         := 12;
+astParams_SATT[5].stBeamParams.nMachineMode  := 2;
+
+astParams_SATT[6].sPmpsState                 := 'TST:SATT-FILTER5';
+astParams_SATT[6].nRequestAssertionID        := 1106;
+astParams_SATT[6].stReactiveParams.nTempSP   := 30;
+astParams_SATT[6].stBeamParams.nBeamClass    := 2#0000_0001;
+astParams_SATT[6].stBeamParams.neVRange      := 2#1111_1111_1111_1111_1111_1111_1111_1111;
+astParams_SATT[6].stBeamParams.nRate         := 10;
+astParams_SATT[6].stBeamParams.nTran         := 12;
+astParams_SATT[6].stBeamParams.nMachineMode  := 2;
+
+astParams_SATT[7].sPmpsState                 := 'TST:SATT-FILTER6';
+astParams_SATT[7].nRequestAssertionID        := 1107;
+astParams_SATT[7].stReactiveParams.nTempSP   := 30;
+astParams_SATT[7].stBeamParams.nBeamClass    := 2#0000_0001;
+astParams_SATT[7].stBeamParams.neVRange      := 2#1111_1111_1111_1111_1111_1111_1111_1111;
+astParams_SATT[7].stBeamParams.nRate         := 10;
+astParams_SATT[7].stBeamParams.nTran         := 12;
+astParams_SATT[7].stBeamParams.nMachineMode  := 2;
+
+astParams_SATT[8].sPmpsState                 := 'TST:SATT-FILTER7';
+astParams_SATT[8].nRequestAssertionID        := 1108;
+astParams_SATT[8].stReactiveParams.nTempSP   := 30;
+astParams_SATT[8].stBeamParams.nBeamClass    := 2#0000_0001;
+astParams_SATT[8].stBeamParams.neVRange      := 2#1111_1111_1111_1111_1111_1111_1111_1111;
+astParams_SATT[8].stBeamParams.nRate         := 10;
+astParams_SATT[8].stBeamParams.nTran         := 12;
+astParams_SATT[8].stBeamParams.nMachineMode  := 2;
+
+astParams_SATT[9].sPmpsState                 := 'TST:SATT-FILTER8';
+astParams_SATT[9].nRequestAssertionID        := 1109;
+astParams_SATT[9].stReactiveParams.nTempSP   := 30;
+astParams_SATT[9].stBeamParams.nBeamClass    := 2#0000_0001;
+astParams_SATT[9].stBeamParams.neVRange      := 2#1111_1111_1111_1111_1111_1111_1111_1111;
+astParams_SATT[9].stBeamParams.nRate         := 10;
+astParams_SATT[9].stBeamParams.nTran         := 12;
+astParams_SATT[9].stBeamParams.nMachineMode  := 2;
 
 (* ---- TST:POWER (single reactive-temp key; aperture geometry is
    not state-keyed). nTempSP is the RTD fault threshold in degC: the

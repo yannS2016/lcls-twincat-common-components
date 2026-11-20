@@ -1,17 +1,18 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <TcPlcObject Version="1.1.0.1">
   <POU Name="FB_SATT_FilterConfig" Id="{2c9f4a10-7b3e-4d61-9a52-0e8c1f4b3a21}" SpecialFunc="None">
-    <Declaration><![CDATA[(* Per-filter writer of one slot in a SATT stage's filter table. Integrator-owned,
-   one instance per populated slot. Mirrors FB_CC_StatePMPSConfig: a one-shot
-   write of the material and thickness from CallAfterInit, through the
-   I_SATTFilters interface of the stage, so the stage needs no public table.
-   Empty body, so online edits persist. The stage, the slot index and the values
-   are injected via FB_Init. *)
+    <Declaration><![CDATA[(* Per-filter writer of one ST_SATT_Filter slot in a SATT stage's
+   arrFilters table. Integrator-owned, one instance per populated slot.
+   Mirrors FB_CC_StatePMPSConfig: a one-shot write of sFilterMaterial and
+   fFilterThickness_um from CallAfterInit; empty body, so online edits
+   persist. Slot ref and values injected via FB_Init REFERENCE TO. *)
 {attribute 'call_after_init'}
 FUNCTION_BLOCK FB_SATT_FilterConfig
+VAR_INPUT
+END_VAR
 VAR
-    iFilters            : I_SATTFilters;
-    nIndex              : UINT;
+    {attribute 'no_copy'}
+    stFilter            : REFERENCE TO ST_SATT_Filter;
     sFilterMaterial     : STRING;
     fFilterThickness_um : LREAL;
 END_VAR
@@ -19,36 +20,33 @@ END_VAR
     <Implementation>
       <ST><![CDATA[]]></ST>
     </Implementation>
-    <Method Name="CallAfterInit" Id="{8ab8e7c5-e2b0-4d17-b08d-3c262beb3cf4}">
-      <Declaration><![CDATA[(* One-shot write of the per-filter material and thickness into the stage. *)
+    <Method Name="CallAfterInit" Id="{2c9f4a10-7b3e-4d61-9a52-0e8c1f4b3a23}">
+      <Declaration><![CDATA[(* One-shot write of the per-filter material and thickness into the
+   referenced arrFilters slot. *)
 {attribute 'call_after_init'}
 METHOD CallAfterInit
-]]></Declaration>
+VAR_INPUT
+END_VAR]]></Declaration>
       <Implementation>
-        <ST><![CDATA[IF iFilters <> 0 THEN
-    iFilters.SetFilter(
-        Index        := nIndex,
-        Material     := sFilterMaterial,
-        Thickness_um := fFilterThickness_um
-    );
+        <ST><![CDATA[IF __ISVALIDREF(THIS^.stFilter) THEN
+    THIS^.stFilter.sFilterMaterial     := THIS^.sFilterMaterial;
+    THIS^.stFilter.fFilterThickness_um := THIS^.fFilterThickness_um;
 END_IF]]></ST>
       </Implementation>
     </Method>
-    <Method Name="FB_Init" Id="{149cfcc4-5319-4641-9f68-61cf6b8caa9d}">
-      <Declaration><![CDATA[(* Stores the stage interface, the slot index and the per-filter material and
+    <Method Name="FB_Init" Id="{2c9f4a10-7b3e-4d61-9a52-0e8c1f4b3a22}">
+      <Declaration><![CDATA[(* Stores the slot reference plus the per-filter material and
    thickness at instantiation. *)
 METHOD FB_Init : BOOL
 VAR_INPUT
     bInitRetains        : BOOL;
     bInCopyCode         : BOOL;
-    iFilters            : I_SATTFilters;
-    nIndex              : UINT;
+    stFilter            : REFERENCE TO ST_SATT_Filter;
     sFilterMaterial     : STRING;
     fFilterThickness_um : LREAL;
 END_VAR]]></Declaration>
       <Implementation>
-        <ST><![CDATA[THIS^.iFilters            := iFilters;
-THIS^.nIndex              := nIndex;
+        <ST><![CDATA[THIS^.stFilter REF= stFilter;
 THIS^.sFilterMaterial     := sFilterMaterial;
 THIS^.fFilterThickness_um := fFilterThickness_um;]]></ST>
       </Implementation>

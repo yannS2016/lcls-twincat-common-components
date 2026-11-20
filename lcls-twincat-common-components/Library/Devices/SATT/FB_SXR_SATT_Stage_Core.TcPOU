@@ -4,7 +4,7 @@
     <Declaration><![CDATA[(* Single Solid Attenuator (SATT) core, an abstract base by convention: filter
    stack (L2SI compact, 4 stacks of 8 filters), single-axis mover via
    FB_PositionStateND (states OUT, FILTER1..FILTER8). Holds only references, the
-   filter table and the sub-FBs. Not a PMPS state mover; only RTD reactive-temp
+   filter table input and the sub-FBs. Not a PMPS state mover; only RTD reactive-temp
    fault thresholds and a "device moving" fast fault. Per-cycle transmission from
    filter material/thickness and beam energy. The state bridge is here as
    REFERENCE TO UINT (eEnumSetRef and eEnumGetRef) and the body runs on it, but
@@ -12,7 +12,15 @@
    passes them in. The derived body calls SUPER^() to run this logic, so the FB
    cannot carry no_explicit_call. *)
 {attribute 'call_after_init'}
-FUNCTION_BLOCK FB_SXR_SATT_Stage_Core IMPLEMENTS I_SATTFilters
+FUNCTION_BLOCK FB_SXR_SATT_Stage_Core
+VAR_INPUT
+    (* Per-filter material / thickness table, written by FB_SATT_FilterConfig
+       through a slot reference. Used by the transmission calculation. Index 1
+       corresponds to FILTER1 (which is the state at slot 2 in astPositionState,
+       since OUT lives at slot 1 in E_SXR_SATT_Position). *)
+    {attribute 'pytmc' := 'pv: FILTERS'}
+    arrFilters : ARRAY[1..8] OF ST_SATT_Filter;
+END_VAR
 VAR_OUTPUT
     fTemp1                    : LREAL;
     fTemp2                    : LREAL;
@@ -44,13 +52,6 @@ VAR_OUTPUT
     iFilterIndex              : INT := 0;
 END_VAR
 VAR
-    (* Per-filter material / thickness table, filled through I_SATTFilters.SetFilter.
-       Used by the transmission calculation. Index 1 corresponds to FILTER1 (which is the
-       state at slot 2 in astPositionState, since OUT lives at slot 1
-       in E_SXR_SATT_Position). *)
-    {attribute 'pytmc' := 'pv: FILTERS'}
-    arrFilters : ARRAY[1..8] OF ST_SATT_Filter;
-
     (* State bridge, bound by the derived type to its enum variables. *)
     {attribute 'no_copy'}
     eEnumSetRef : REFERENCE TO UINT;
@@ -265,24 +266,6 @@ THIS^.fbFFHWO          REF= fbFFHWO;
 THIS^.bFileReaderBusy  REF= bFileReaderBusy;
 THIS^.sDeviceName      := sDeviceName;
 THIS^.RTDPMPSState     := RTDPMPSState;]]></ST>
-      </Implementation>
-    </Method>
-    <Method Name="SetFilter" Id="{ca32cb96-498e-4d57-9fe9-75993df6113b}">
-      <Declaration><![CDATA[(* I_SATTFilters: sets the material and thickness of one filter. Index 1 is
-   FILTER1. An index outside 1..8 is ignored. *)
-METHOD SetFilter
-VAR_INPUT
-    Index         : UINT;
-    Material      : STRING;
-    Thickness_um  : LREAL;
-END_VAR
-]]></Declaration>
-      <Implementation>
-        <ST><![CDATA[IF Index >= 1 AND Index <= 8 THEN
-    arrFilters[Index].sFilterMaterial     := Material;
-    arrFilters[Index].fFilterThickness_um := Thickness_um;
-END_IF
-]]></ST>
       </Implementation>
     </Method>
   </POU>

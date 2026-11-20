@@ -1,0 +1,100 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <POU Name="FB_SATTInitHost" Id="{8be1edb3-3d97-48c8-b586-4581014b05a1}" SpecialFunc="None">
+    <Declaration><![CDATA[(* Test host that nests an FB_SXR_SATT_Stage, the way a device FB would. Its references and
+   values are bound in its own FB_Init, which runs after the nested FB_SXR_SATT_Stage was
+   constructed from them, so the nested FB_SXR_SATT_Stage first sees nil references and
+   empty values. CallAfterInit re-supplies all of them through
+   fbSATT.CallAfterInitSATT. *)
+{attribute 'call_after_init'}
+FUNCTION_BLOCK FB_SATTInitHost IMPLEMENTS I_SATTFilters
+VAR
+    {attribute 'no_copy'}
+    aiMotionStage         : REFERENCE TO ARRAY[1..MotionConstants.MAX_STATE_MOTORS] OF I_MotionStage;
+    {attribute 'no_copy'}
+    astPositionState      : REFERENCE TO ARRAY[1..MotionConstants.MAX_STATE_MOTORS]
+                                            OF ARRAY[1..GeneralConstants.MAX_STATES] OF ST_PositionState;
+    {attribute 'no_copy'}
+    bFileReaderBusy       : REFERENCE TO BOOL;
+    {attribute 'no_copy'}
+    fbFFHWO               : REFERENCE TO FB_HardwareFFOutput;
+    sDeviceName           : STRING;
+    RTDPMPSState          : STRING;
+
+    fbSATT : FB_SXR_SATT_Stage(
+        aiMotionStage         := aiMotionStage,
+        astPositionState      := astPositionState,
+        bFileReaderBusy       := bFileReaderBusy,
+        fbFFHWO               := fbFFHWO,
+        sDeviceName           := sDeviceName,
+        RTDPMPSState          := RTDPMPSState
+    );
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[fbSATT();
+]]></ST>
+    </Implementation>
+    <Method Name="CallAfterInit" Id="{7481fcbc-d4b6-4e8b-a4cf-4482870f76e8}">
+      <Declaration><![CDATA[(* The nested fbSATT ran its own CallAfterInit before this one, with nil
+   references. Re-supplies them and redoes its wiring. *)
+{attribute 'call_after_init'}
+METHOD CallAfterInit
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[fbSATT.CallAfterInitSATT(
+    aiMotionStage         := aiMotionStage,
+    astPositionState      := astPositionState,
+    bFileReaderBusy       := bFileReaderBusy,
+    fbFFHWO               := fbFFHWO,
+    sDeviceName           := sDeviceName,
+    RTDPMPSState          := RTDPMPSState
+);
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="FB_Init" Id="{e1b99a2d-1289-4823-a8cc-1c0b3e388a4f}">
+      <Declaration><![CDATA[(* Stores the injected references and values in this FB's fields. *)
+{attribute 'analysis' := '-33'}
+METHOD FB_Init : BOOL
+VAR_INPUT
+    bInitRetains : BOOL;
+    bInCopyCode  : BOOL;
+    aiMotionStage         : REFERENCE TO ARRAY[1..MotionConstants.MAX_STATE_MOTORS] OF I_MotionStage;
+    astPositionState      : REFERENCE TO ARRAY[1..MotionConstants.MAX_STATE_MOTORS]
+                                            OF ARRAY[1..GeneralConstants.MAX_STATES] OF ST_PositionState;
+    bFileReaderBusy       : REFERENCE TO BOOL;
+    fbFFHWO               : REFERENCE TO FB_HardwareFFOutput;
+    sDeviceName           : STRING;
+    RTDPMPSState          : STRING;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[THIS^.aiMotionStage    REF= aiMotionStage;
+THIS^.astPositionState REF= astPositionState;
+THIS^.bFileReaderBusy  REF= bFileReaderBusy;
+THIS^.fbFFHWO          REF= fbFFHWO;
+THIS^.sDeviceName      := sDeviceName;
+THIS^.RTDPMPSState     := RTDPMPSState;]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="SetFilter" Id="{b15037bf-87b1-4976-b534-a3b825ecb486}">
+      <Declaration><![CDATA[(* I_SATTFilters: forwards to the nested stage, so a configurator can fill the
+   filter table through this host. *)
+METHOD SetFilter
+VAR_INPUT
+    Index         : UINT;
+    Material      : STRING;
+    Thickness_um  : LREAL;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[fbSATT.SetFilter(
+    Index        := Index,
+    Material     := Material,
+    Thickness_um := Thickness_um
+);
+]]></ST>
+      </Implementation>
+    </Method>
+  </POU>
+</TcPlcObject>

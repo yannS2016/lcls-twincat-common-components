@@ -1,0 +1,75 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <POU Name="FB_SLITSTHERMALInitHost" Id="{d4b64525-7794-47ad-9d1c-45765fae7ae8}" SpecialFunc="None">
+    <Declaration><![CDATA[(* Test host that nests an FB_SLITS_THERMAL, the way a device FB would. Its references and
+   values are bound in its own FB_Init, which runs after the nested FB_SLITS_THERMAL was
+   constructed from them, so the nested FB_SLITS_THERMAL first sees nil references and
+   empty values. CallAfterInit re-supplies all of them through
+   fbSlits.CallAfterInitTHERMAL. *)
+{attribute 'call_after_init'}
+FUNCTION_BLOCK FB_SLITSTHERMALInitHost
+VAR
+    {attribute 'no_copy'}
+    aiMotionStage : REFERENCE TO ARRAY[1..4] OF I_MotionStage;
+    {attribute 'no_copy'}
+    fbFFHWO       : REFERENCE TO FB_HardwareFFOutput;
+    sDeviceName   : STRING;
+    sPmpsState    : STRING;
+    {attribute 'no_copy'}
+    bFileReaderBusy : REFERENCE TO BOOL;
+
+    fbSlits : FB_SLITS_THERMAL(
+        aiMotionStage   := aiMotionStage,
+        fbFFHWO         := fbFFHWO,
+        sDeviceName     := sDeviceName,
+        sPmpsState      := sPmpsState,
+        bFileReaderBusy := bFileReaderBusy
+    );
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[fbSlits(
+    bMoveOk := TRUE
+);
+]]></ST>
+    </Implementation>
+    <Method Name="CallAfterInit" Id="{4248aff8-1f52-440b-995b-ec9bacc9ca08}">
+      <Declaration><![CDATA[(* The nested fbSlits ran its own CallAfterInit before this one, with nil
+   references. Re-supplies them and redoes its wiring. *)
+{attribute 'call_after_init'}
+METHOD CallAfterInit
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[fbSlits.CallAfterInitTHERMAL(
+    aiMotionStage   := aiMotionStage,
+    fbFFHWO         := fbFFHWO,
+    sDeviceName     := sDeviceName,
+    sPmpsState      := sPmpsState,
+    bFileReaderBusy := bFileReaderBusy
+);
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="FB_Init" Id="{1fe57654-16dd-4332-84b7-609f40054957}">
+      <Declaration><![CDATA[(* Stores the injected references and values in this FB's fields. *)
+{attribute 'analysis' := '-33'}
+METHOD FB_Init : BOOL
+VAR_INPUT
+    bInitRetains : BOOL;
+    bInCopyCode  : BOOL;
+    aiMotionStage : REFERENCE TO ARRAY[1..4] OF I_MotionStage;
+    fbFFHWO       : REFERENCE TO FB_HardwareFFOutput;
+    sDeviceName   : STRING;
+    sPmpsState    : STRING;
+    bFileReaderBusy : REFERENCE TO BOOL;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[THIS^.aiMotionStage REF= aiMotionStage;
+THIS^.fbFFHWO       REF= fbFFHWO;
+THIS^.sDeviceName   := sDeviceName;
+THIS^.sPmpsState    := sPmpsState;
+THIS^.bFileReaderBusy REF= bFileReaderBusy;]]></ST>
+      </Implementation>
+    </Method>
+  </POU>
+</TcPlcObject>

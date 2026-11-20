@@ -49,5 +49,19 @@
 		<Axis File="PRG_WFS_Y.xti" Id="29"/>
 		<Axis File="PRG_XPIM_Y.xti" Id="30"/>
 		<Axis File="PRG_KBO_Y.xti" Id="31"/>
+		<Axis File="PRG_COATING_Y.xti" Id="45"/>
+		<Axis File="PRG_SATT_Y.xti" Id="44"/>
+		<Axis File="PRG_SLITS_Top.xti" Id="32"/>
+		<Axis File="PRG_SLITS_Bottom.xti" Id="33"/>
+		<Axis File="PRG_SLITS_North.xti" Id="34"/>
+		<Axis File="PRG_SLITS_South.xti" Id="35"/>
+		<Axis File="PRG_SLITSTHERMAL_Top.xti" Id="36"/>
+		<Axis File="PRG_SLITSTHERMAL_Bottom.xti" Id="37"/>
+		<Axis File="PRG_SLITSTHERMAL_North.xti" Id="38"/>
+		<Axis File="PRG_SLITSTHERMAL_South.xti" Id="39"/>
+		<Axis File="PRG_SLITSPOWER_Top.xti" Id="40"/>
+		<Axis File="PRG_SLITSPOWER_Bottom.xti" Id="41"/>
+		<Axis File="PRG_SLITSPOWER_North.xti" Id="42"/>
+		<Axis File="PRG_SLITSPOWER_South.xti" Id="43"/>
 	</NC>
 </TcSmItem>

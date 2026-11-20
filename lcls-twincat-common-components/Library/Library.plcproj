@@ -298,6 +298,21 @@
     <Compile Include="Tests\Helpers\FB_KBOInitHost.TcPOU">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Tests\Helpers\FB_CoatingInitHost.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Tests\Helpers\FB_SATTInitHost.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Tests\Helpers\FB_SLITSInitHost.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Tests\Helpers\FB_SLITSTHERMALInitHost.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Tests\Helpers\FB_SLITSPOWERInitHost.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Tests\Helpers\FB_ATMInitHost.TcPOU">
       <SubType>Code</SubType>
     </Compile>
@@ -336,6 +351,21 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Tests\PRG_KBOInit.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Tests\PRG_CoatingInit.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Tests\PRG_SATTInit.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Tests\PRG_SLITSInit.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Tests\PRG_SLITSTHERMALInit.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Tests\PRG_SLITSPOWERInit.TcPOU">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Tests\PRG_ATMInit.TcPOU">

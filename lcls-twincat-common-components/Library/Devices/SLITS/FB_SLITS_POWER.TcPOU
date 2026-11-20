@@ -70,7 +70,41 @@ VAR_INPUT
 END_VAR
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[THIS^.fApertureMargin := fApertureMargin;
+        <ST><![CDATA[THIS^.CallAfterInitPOWER(
+    aiMotionStage   := aiMotionStage,
+    fbFFHWO         := fbFFHWO,
+    sDeviceName     := sDeviceName,
+    sPmpsState      := sPmpsState,
+    bFileReaderBusy := bFileReaderBusy,
+    fApertureMargin := fApertureMargin
+);
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="CallAfterInitPOWER" Id="{c487e3da-7571-4622-ae6d-7ad241316e77}">
+      <Declaration><![CDATA[(* Provides every FB_SLITS_POWER FB_Init input, through the FB_SLITS_THERMAL
+   re-wire. An FB that nests an FB_SLITS_POWER calls it from its own
+   CallAfterInit. *)
+METHOD CallAfterInitPOWER
+VAR_INPUT
+    aiMotionStage   : REFERENCE TO ARRAY[1..4] OF I_MotionStage;
+    fbFFHWO         : REFERENCE TO FB_HardwareFFOutput;
+    sDeviceName     : STRING;
+    sPmpsState      : STRING;
+    bFileReaderBusy : REFERENCE TO BOOL;
+    fApertureMargin : REAL;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[SUPER^.CallAfterInitTHERMAL(
+    aiMotionStage   := aiMotionStage,
+    fbFFHWO         := fbFFHWO,
+    sDeviceName     := sDeviceName,
+    sPmpsState      := sPmpsState,
+    bFileReaderBusy := bFileReaderBusy
+);
+
+THIS^.fApertureMargin := fApertureMargin;
 fbTrustedAptWidth.sName  := CONCAT(sDeviceName, ' aperture width');
 fbTrustedAptHeight.sName := CONCAT(sDeviceName, ' aperture height');
 ]]></ST>

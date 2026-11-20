@@ -126,7 +126,36 @@ VAR_INPUT
 END_VAR
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[THIS^.sPmpsState := sPmpsState;
+        <ST><![CDATA[THIS^.CallAfterInitTHERMAL(
+    aiMotionStage   := aiMotionStage,
+    fbFFHWO         := fbFFHWO,
+    sDeviceName     := sDeviceName,
+    sPmpsState      := sPmpsState,
+    bFileReaderBusy := bFileReaderBusy
+);
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="CallAfterInitTHERMAL" Id="{721939b4-d6d0-4c57-b0c1-079fd562bdec}">
+      <Declaration><![CDATA[(* Provides every FB_SLITS_THERMAL FB_Init input, through the FB_SLITS re-wire.
+   An FB that nests an FB_SLITS_THERMAL calls it from its own CallAfterInit. *)
+METHOD CallAfterInitTHERMAL
+VAR_INPUT
+    aiMotionStage   : REFERENCE TO ARRAY[1..4] OF I_MotionStage;
+    fbFFHWO         : REFERENCE TO FB_HardwareFFOutput;
+    sDeviceName     : STRING;
+    sPmpsState      : STRING;
+    bFileReaderBusy : REFERENCE TO BOOL;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[SUPER^.CallAfterInitSLITS(
+    aiMotionStage := aiMotionStage,
+    fbFFHWO       := fbFFHWO,
+    sDeviceName   := sDeviceName
+);
+
+THIS^.sPmpsState := sPmpsState;
 THIS^.bFileReaderBusy REF= bFileReaderBusy;
 ]]></ST>
       </Implementation>

@@ -233,20 +233,73 @@ M_Motion();
 ]]></ST>
     </Implementation>
     <Method Name="CallAfterInit" Id="{2bf5a8b9-6045-4972-b69a-4ac8a54c0162}">
-      <Declaration><![CDATA[(* Auto-fired once after FB_Init binds the REFs. The four FB_StatePTPMove
-   blade movers were inline-init'd with nil interface refs, so this re-supplies
-   each blade's now-valid interface and scratch ST_PositionState, and sets the
-   FFO device name. *)
+      <Declaration><![CDATA[(* Auto-fired once after FB_Init binds the REFs. Wires the four blade movers through
+   CallAfterInitCore. *)
 {attribute 'call_after_init'}
 METHOD CallAfterInit
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[fbTop.CallAfterInit(    stPositionState := stTop,    iMotionStage := aiMotionStage[E_SlitsBlade.TOP]);
-fbBottom.CallAfterInit( stPositionState := stBottom, iMotionStage := aiMotionStage[E_SlitsBlade.BOTTOM]);
-fbNorth.CallAfterInit(  stPositionState := stNorth,  iMotionStage := aiMotionStage[E_SlitsBlade.NORTH]);
-fbSouth.CallAfterInit(  stPositionState := stSouth,  iMotionStage := aiMotionStage[E_SlitsBlade.SOUTH]);
+        <ST><![CDATA[THIS^.CallAfterInitCore();
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="CallAfterInitCore" Id="{5c344acd-53fe-4568-a37d-fdc6f668c333}">
+      <Declaration><![CDATA[(* The four FB_StatePTPMove blade movers were inline-init'd with nil interface refs,
+   so this re-supplies each blade's now-valid interface and scratch
+   ST_PositionState, and sets the FFO device name. Does nothing while the
+   motion stages or the fast-fault output are still nil, as when this FB is
+   nested and its own CallAfterInit runs before its host has supplied them. A
+   derived type calls it again through SUPER^ after a re-wire. *)
+METHOD PROTECTED CallAfterInitCore
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF NOT __ISVALIDREF(aiMotionStage) OR NOT __ISVALIDREF(fbFFHWO) THEN
+    RETURN;
+END_IF
 
-FFO.i_DevName := sDeviceName;]]></ST>
+fbTop.CallAfterInit(
+    stPositionState := stTop,
+    iMotionStage    := aiMotionStage[E_SlitsBlade.TOP]
+);
+fbBottom.CallAfterInit(
+    stPositionState := stBottom,
+    iMotionStage    := aiMotionStage[E_SlitsBlade.BOTTOM]
+);
+fbNorth.CallAfterInit(
+    stPositionState := stNorth,
+    iMotionStage    := aiMotionStage[E_SlitsBlade.NORTH]
+);
+fbSouth.CallAfterInit(
+    stPositionState := stSouth,
+    iMotionStage    := aiMotionStage[E_SlitsBlade.SOUTH]
+);
+
+FFO.i_DevName := sDeviceName;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="CallAfterInitSLITS" Id="{e50a065e-166b-42d0-b7e8-cdb420182ed3}">
+      <Declaration><![CDATA[(* Provides every FB_SLITS FB_Init input and wires the blade movers. FB_Init and
+   the derived re-wire methods call it. An FB that nests a slit calls the
+   re-wire method of its type from its own CallAfterInit: the nested slit's
+   CallAfterInit runs before the host's, with nil references, so the re-wire
+   redoes the whole wiring. *)
+METHOD CallAfterInitSLITS
+VAR_INPUT
+    aiMotionStage : REFERENCE TO ARRAY[1..4] OF I_MotionStage;
+    fbFFHWO       : REFERENCE TO FB_HardwareFFOutput;
+    sDeviceName   : STRING;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[THIS^.aiMotionStage REF= aiMotionStage;
+THIS^.fbFFHWO       REF= fbFFHWO;
+THIS^.sDeviceName   := sDeviceName;
+fbCheckAptWidth.sName    := CONCAT(sDeviceName, ' PMPS check width');
+fbCheckAptHeight.sName   := CONCAT(sDeviceName, ' PMPS check height');
+
+THIS^.CallAfterInitCore();
+]]></ST>
       </Implementation>
     </Method>
     <Method Name="FB_Init" Id="{e16e0f37-b04b-4e2b-a3f3-e910fdc91097}">
@@ -265,11 +318,11 @@ VAR_INPUT
 END_VAR
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[THIS^.aiMotionStage REF= aiMotionStage;
-THIS^.fbFFHWO       REF= fbFFHWO;
-THIS^.sDeviceName   := sDeviceName;
-fbCheckAptWidth.sName    := CONCAT(sDeviceName, ' PMPS check width');
-fbCheckAptHeight.sName   := CONCAT(sDeviceName, ' PMPS check height');
+        <ST><![CDATA[THIS^.CallAfterInitSLITS(
+    aiMotionStage := aiMotionStage,
+    fbFFHWO       := fbFFHWO,
+    sDeviceName   := sDeviceName
+);
 ]]></ST>
       </Implementation>
     </Method>

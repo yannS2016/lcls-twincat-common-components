@@ -35,6 +35,21 @@
       <Name>PRG_KBOInit</Name>
     </PouCall>
     <PouCall>
+      <Name>PRG_CoatingInit</Name>
+    </PouCall>
+    <PouCall>
+      <Name>PRG_SATTInit</Name>
+    </PouCall>
+    <PouCall>
+      <Name>PRG_SLITSInit</Name>
+    </PouCall>
+    <PouCall>
+      <Name>PRG_SLITSTHERMALInit</Name>
+    </PouCall>
+    <PouCall>
+      <Name>PRG_SLITSPOWERInit</Name>
+    </PouCall>
+    <PouCall>
       <Name>PRG_PMPS_POST</Name>
     </PouCall>
     <TaskFBGuid>{f7877f57-43f0-4f0d-806a-16cf348fa2b5}</TaskFBGuid>

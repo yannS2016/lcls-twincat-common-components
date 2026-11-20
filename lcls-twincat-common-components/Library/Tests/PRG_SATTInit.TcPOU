@@ -6,7 +6,7 @@
    and the host. The arbiter, fast-fault output, persistent storage and DB
    reader are shared in GVL_PRG and ticked by PRG_PMPS_PRE and PRG_PMPS_POST. The filter configurators write through the host,
    which implements I_SATTFilters. The RTD reactive temperature comes from
-   AT1K4:L2SI-RTD in plc-cc-motion.json. *)
+   TST:SATT-RTD in plc-cc-motion.json. *)
 PROGRAM PRG_SATTInit
 VAR
 	{attribute 'TcNcAxis' := 'PRG_SATT_Y'}
@@ -26,8 +26,8 @@ VAR
         astPositionState := astPositionState,
         bFileReaderBusy  := MOTION_GVL.fbPmpsFileReader.bBusy,
         fbFFHWO          := GVL_PRG.fbFastFaultOutput1,
-        sDeviceName      := 'AT1K4:L2SI',
-        RTDPMPSState     := 'AT1K4:L2SI-RTD'
+        sDeviceName      := 'TST:SATT',
+        RTDPMPSState     := 'TST:SATT-RTD'
     );
 
     stDefault : ST_PositionState := (

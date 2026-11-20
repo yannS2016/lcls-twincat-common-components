@@ -4,7 +4,7 @@
     <Declaration><![CDATA[(* Production-style program with a FB_SLITS_THERMAL nested in FB_SLITSTHERMALInitHost. It follows
    PRG_ATMInit: the motor stages, the configurators where the device has them,
    and the host. The arbiter, fast-fault output, persistent storage and DB
-   reader are shared in GVL_PRG and ticked by PRG_PMPS_PRE and PRG_PMPS_POST. The RTD limits come from SL1L0:THERMAL in
+   reader are shared in GVL_PRG and ticked by PRG_PMPS_PRE and PRG_PMPS_POST. The RTD limits come from TST:THERMAL in
    plc-cc-motion.json. *)
 PROGRAM PRG_SLITSTHERMALInit
 VAR
@@ -33,8 +33,8 @@ VAR
     fbHost : FB_SLITSTHERMALInitHost(
         aiMotionStage   := aiMotionStage,
         fbFFHWO         := GVL_PRG.fbFastFaultOutput1,
-        sDeviceName     := 'SL1L0:THERMAL',
-        sPmpsState      := 'SL1L0:THERMAL-RTD',
+        sDeviceName     := 'TST:THERMAL',
+        sPmpsState      := 'TST:THERMAL-RTD',
         bFileReaderBusy := MOTION_GVL.fbPmpsFileReader.bBusy
     );
 

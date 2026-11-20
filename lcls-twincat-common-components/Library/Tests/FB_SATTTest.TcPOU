@@ -19,7 +19,7 @@ VAR
 
     fbFFHWO : FB_HardwareFFOutput;
 
-    sDeviceName : STRING := 'AT1K4:L2SI';
+    sDeviceName : STRING := 'TST:SATT';
     bFileReaderBusy :  BOOL;
     fbArbiter  : FB_Arbiter(1);
     fbSubSysIO : FB_DummyArbIO;
@@ -30,7 +30,7 @@ VAR
         fbFFHWO          := fbFFHWO,
         bFileReaderBusy  := bFileReaderBusy,
         sDeviceName      := sDeviceName,
-        RTDPMPSState     := 'AT1K4:L2SI-RTD'
+        RTDPMPSState     := 'TST:SATT-RTD'
     );
 
     stDefault : ST_PositionState := (

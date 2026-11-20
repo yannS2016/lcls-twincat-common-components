@@ -34,8 +34,8 @@ VAR
     fbSlitsPower : FB_SLITS_POWER(
         aiMotionStage   := aiMotionStage,
         fbFFHWO         := fbFFHWO,
-        sDeviceName     := 'SL1L0:POWER',
-        sPmpsState      := 'SL1L0:POWER-RTD',
+        sDeviceName     := 'TST:POWER',
+        sPmpsState      := 'TST:POWER-RTD',
         bFileReaderBusy := bSimFileReaderBusy,
         fApertureMargin := 0.01 // -> must be provided here
     );
@@ -63,8 +63,8 @@ VAR
     fbSlitsLogic : FB_SLITS_POWER(
         aiMotionStage   := aiMotionStageLogic,
         fbFFHWO         := fbFFHWOLogic,
-        sDeviceName     := 'SL1L0:POWER',
-        sPmpsState      := 'SL1L0:POWER-RTD',
+        sDeviceName     := 'TST:POWER',
+        sPmpsState      := 'TST:POWER-RTD',
         bFileReaderBusy := bSimFileReaderBusyLogic,
         fApertureMargin := 0.01
     );

@@ -114,6 +114,10 @@ VAR_INPUT
     bReadDBNow             : BOOL;
     bFileReaderBusy        : REFERENCE TO BOOL;
     bFileReaderError       : REFERENCE TO BOOL;
+    fResponsivity          : LREAL;
+    iTermBits              : UINT;
+    fTermMax               : REAL;
+    fTermMin               : REAL;
 END_VAR
 ]]></Declaration>
       <Implementation>
@@ -204,12 +208,7 @@ VAR_INPUT
     fTermMin               : REAL;
 END_VAR]]></Declaration>
       <Implementation>
-        <ST><![CDATA[THIS^.fResponsivity := fResponsivity;
-THIS^.iTermBits     := iTermBits;
-THIS^.fTermMax      := fTermMax;
-THIS^.fTermMin      := fTermMin;
-
-THIS^.CallAfterInitPPM(
+        <ST><![CDATA[THIS^.CallAfterInitPPM(
     aiMotionStage         := aiMotionStage,
     astPositionState      := astPositionState,
     fbFFHWO               := fbFFHWO,
@@ -220,7 +219,11 @@ THIS^.CallAfterInitPPM(
     bEnablePositionLimits := bEnablePositionLimits,
     bReadDBNow            := bReadDBNow,
     bFileReaderBusy       := bFileReaderBusy,
-    bFileReaderError      := bFileReaderError
+    bFileReaderError      := bFileReaderError,
+    fResponsivity         := fResponsivity,
+    iTermBits             := iTermBits,
+    fTermMax              := fTermMax,
+    fTermMin              := fTermMin
 );]]></ST>
       </Implementation>
     </Method>

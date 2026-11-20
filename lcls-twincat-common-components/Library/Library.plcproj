@@ -43,6 +43,7 @@
     <Folder Include="DUTs" />
     <Folder Include="Tests" />
     <Folder Include="POUs" />
+    <Folder Include="GVLs" />
     <Folder Include="Tests\Helpers" />
     <Folder Include="Version" />
   </ItemGroup>
@@ -261,6 +262,33 @@
     <Compile Include="Tests\FB_XPIMTest.TcPOU">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="GVLs\GVL_PRG.TcGVL">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Tests\Helpers\FB_LICInitHost.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Tests\Helpers\FB_GBSInitHost.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Tests\Helpers\FB_IPMInitHost.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Tests\Helpers\FB_PPMInitHost.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Tests\Helpers\FB_REFInitHost.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Tests\Helpers\FB_WFSInitHost.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Tests\Helpers\FB_XPIMInitHost.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Tests\Helpers\FB_KBOInitHost.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Tests\Helpers\FB_ATMInitHost.TcPOU">
       <SubType>Code</SubType>
     </Compile>
@@ -271,7 +299,34 @@
     <Compile Include="Tests\Helpers\FB_CC_PMPSTestSetup.TcPOU">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Tests\FB_ATMInitTest.TcPOU">
+    <Compile Include="Tests\PRG_PMPS_PRE.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Tests\PRG_PMPS_POST.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Tests\PRG_LICInit.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Tests\PRG_GBSInit.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Tests\PRG_IPMInit.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Tests\PRG_PPMInit.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Tests\PRG_REFInit.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Tests\PRG_WFSInit.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Tests\PRG_XPIMInit.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Tests\PRG_KBOInit.TcPOU">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Tests\PRG_ATMInit.TcPOU">

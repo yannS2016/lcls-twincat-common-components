@@ -78,6 +78,7 @@ VAR_INPUT
     bReadDBNow             : BOOL;
     bFileReaderBusy        : REFERENCE TO BOOL;
     bFileReaderError       : REFERENCE TO BOOL;
+    fTermMax               : LREAL;
 END_VAR
 ]]></Declaration>
       <Implementation>
@@ -92,6 +93,8 @@ SUPER^.bEnablePositionLimits := bEnablePositionLimits;
 SUPER^.bReadDBNow            := bReadDBNow;
 SUPER^.bFileReaderBusy       REF= bFileReaderBusy;
 SUPER^.bFileReaderError      REF= bFileReaderError;
+
+SUPER^.fTermMax := fTermMax;
 
 SUPER^.eEnumSetRef REF= THIS^.eEnumSet;
 SUPER^.eEnumGetRef REF= THIS^.eEnumGet;
@@ -158,9 +161,7 @@ VAR_INPUT
     fTermMax               : LREAL;
 END_VAR]]></Declaration>
       <Implementation>
-        <ST><![CDATA[SUPER^.fTermMax := fTermMax;
-
-THIS^.CallAfterInitREF(
+        <ST><![CDATA[THIS^.CallAfterInitREF(
     aiMotionStage         := aiMotionStage,
     astPositionState      := astPositionState,
     fbFFHWO               := fbFFHWO,
@@ -171,7 +172,8 @@ THIS^.CallAfterInitREF(
     bEnablePositionLimits := bEnablePositionLimits,
     bReadDBNow            := bReadDBNow,
     bFileReaderBusy       := bFileReaderBusy,
-    bFileReaderError      := bFileReaderError
+    bFileReaderError      := bFileReaderError,
+    fTermMax              := fTermMax
 );]]></ST>
       </Implementation>
     </Method>

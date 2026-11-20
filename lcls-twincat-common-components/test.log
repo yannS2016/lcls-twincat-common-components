@@ -1,0 +1,31 @@
+Severity	Code	Description	Project	File	Line	Suppression State
+Error		2026/11/20 07:50:40 810 ms | 'lcls_twincat_common_components.Library.PRG_TEST.fbPPMTest.fbPPM.fbPowerMeter.fbTempSensor.fbLogger/MPS': Critical (Temp Threshold Fault, beam off)				
+Error		2026/11/20 07:50:39 054 ms | 'lcls_twincat_common_components.Library.PRG_TEST.fbCCTempSensorTest.fbTempSensor.fbLogger/MPS': Critical (Temp Threshold Fault, beam off)				
+Error		2026/11/20 07:50:39 054 ms | 'lcls_twincat_common_components.Library.PRG_TEST.fbCCTempSensorTest.fbTempSensor.fbLogger/MPS': Critical (Temp Threshold Fault, beam off)				
+Error		2026/11/20 07:50:39 054 ms | 'lcls_twincat_common_components.Library.PRG_TEST.fbCCTempSensorTest.fbTempSensor.fbLogger/MPS': Critical (Temp Threshold Fault, beam off)				
+Error		2026/11/20 07:50:39 054 ms | 'lcls_twincat_common_components.Library.PRG_TEST.fbCCTempSensorTest.fbTempSensor.fbLogger/MPS': Critical (Temp Threshold Fault, beam off)				
+Error		2026/11/20 07:50:40 142 ms | 'lcls_twincat_common_components.Library.PRG_TEST.fbSATTTest.fbSATT.fbRTD_1.fbLogger/MPS': Critical (Temp Threshold Fault, beam off)				
+Error		2026/11/20 07:50:40 142 ms | 'lcls_twincat_common_components.Library.PRG_TEST.fbSATTTest.fbSATT.fbRTD_1.fbLogger/MPS': Critical (Temp Threshold Fault, beam off)				
+Error		2026/11/20 07:50:40 142 ms | 'lcls_twincat_common_components.Library.PRG_TEST.fbSATTTest.fbSATT.fbRTD_2.fbLogger/MPS': Critical (Temp Threshold Fault, beam off)				
+Error		2026/11/20 07:50:40 142 ms | 'lcls_twincat_common_components.Library.PRG_TEST.fbSATTTest.fbSATT.fbRTD_2.fbLogger/MPS': Critical (Temp Threshold Fault, beam off)				
+Error		2026/11/20 07:50:40 152 ms | 'lcls_twincat_common_components.Library.PRG_TEST.fbWFSTest.fbWFS.fbThermoCouple1.fbLogger/MPS': Critical (Temp Threshold Fault, beam off)				
+Error		2026/11/20 07:50:40 152 ms | 'lcls_twincat_common_components.Library.PRG_TEST.fbWFSTest.fbWFS.fbThermoCouple1.fbLogger/MPS': Critical (Temp Threshold Fault, beam off)				
+Error		2026/11/20 07:50:40 152 ms | 'lcls_twincat_common_components.Library.PRG_TEST.fbWFSTest.fbWFS.fbThermoCouple2.fbLogger/MPS': Critical (Temp Threshold Fault, beam off)				
+Error		2026/11/20 07:50:40 152 ms | 'lcls_twincat_common_components.Library.PRG_TEST.fbWFSTest.fbWFS.fbThermoCouple2.fbLogger/MPS': Critical (Temp Threshold Fault, beam off)				
+Error		2026/11/20 07:50:40 159 ms | 'lcls_twincat_common_components.Library.PRG_TEST.fbATMTest.fbATM.fbTempSensor1.fbLogger/MPS': Critical (Temp Threshold Fault, beam off)				
+Error		2026/11/20 07:50:40 159 ms | 'lcls_twincat_common_components.Library.PRG_TEST.fbATMTest.fbATM.fbTempSensor1.fbLogger/MPS': Critical (Temp Threshold Fault, beam off)				
+Error		2026/11/20 07:50:40 160 ms | 'lcls_twincat_common_components.Library.PRG_TEST.fbGBSTest.fbGBS.fbRTD1.fbLogger/MPS': Critical (Temp Threshold Fault, beam off)				
+Error		2026/11/20 07:50:40 160 ms | 'lcls_twincat_common_components.Library.PRG_TEST.fbGBSTest.fbGBS.fbRTD1.fbLogger/MPS': Critical (Temp Threshold Fault, beam off)				
+Error		2026/11/20 07:50:40 160 ms | 'lcls_twincat_common_components.Library.PRG_TEST.fbGBSTest.fbGBS.fbRTD2.fbLogger/MPS': Critical (Temp Threshold Fault, beam off)				
+Error		2026/11/20 07:50:40 160 ms | 'lcls_twincat_common_components.Library.PRG_TEST.fbGBSTest.fbGBS.fbRTD2.fbLogger/MPS': Critical (Temp Threshold Fault, beam off)				
+Error		2026/11/20 07:50:40 160 ms | 'lcls_twincat_common_components.Library.PRG_TEST.fbPPMTest.fbPPM.fbYagTempSensor.fbLogger/MPS': Critical (Temp Threshold Fault, beam off)				
+Error		2026/11/20 07:50:40 160 ms | 'lcls_twincat_common_components.Library.PRG_TEST.fbPPMTest.fbPPM.fbYagTempSensor.fbLogger/MPS': Critical (Temp Threshold Fault, beam off)				
+Error		2026/11/20 07:50:40 810 ms | 'lcls_twincat_common_components.Library.PRG_TEST.fbPPMTest.fbPPM.fbPowerMeter.fbTempSensor.fbLogger/MPS': Critical (Temp Threshold Fault, beam off)				
+Error		2026/11/20 07:50:42 338 ms | 'TcOpcUaServer' (10236): License invalid.				
+Error		2026/11/20 07:50:42 439 ms | 'PlcTask' (350): | ==========TESTS FINISHED RUNNING==========				
+Error		2026/11/20 07:50:42 459 ms | 'PlcTask' (350): | Test suites: 10				
+Error		2026/11/20 07:50:42 479 ms | 'PlcTask' (350): | Tests: 17				
+Error		2026/11/20 07:50:42 499 ms | 'PlcTask' (350): | Successful tests: 17				
+Error		2026/11/20 07:50:42 519 ms | 'PlcTask' (350): | Failed tests: 0				
+Error		2026/11/20 07:50:42 539 ms | 'PlcTask' (350): | Duration: 2.0597453				
+Error		2026/11/20 07:50:42 559 ms | 'PlcTask' (350): | ======================================				

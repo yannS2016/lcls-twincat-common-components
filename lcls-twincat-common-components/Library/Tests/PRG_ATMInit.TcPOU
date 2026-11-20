@@ -2,33 +2,21 @@
 <TcPlcObject Version="1.1.0.1">
   <POU Name="PRG_ATMInit" Id="{320538ce-3d32-464e-a1a8-5a9249218d56}" SpecialFunc="None">
     <Declaration><![CDATA[(* Production-style device program that nests an FB_ATM. It follows PRG_PMPS in
-   the motion library: a motor, the PMPS state-name configurators, the file
-   based PMPS DB reader, a dummy arbiter I/O and the fast-fault output, ticked
-   in production order. fbHost is the only device in it. The PMPS state names
-   are configured here, in the PRG, because fbHost's own references are not
-   bound yet when its declaration initialisers run. FB_ATMInitTest reads the
-   state array this PRG fills. *)
+   the motion library: one motor, the PMPS state-name configurators and the
+   host. The arbiter, fast-fault output, persistent storage and DB reader are
+   shared in GVL_PRG and ticked by PRG_PMPS_PRE and PRG_PMPS_POST. The
+   configurators are in the PRG, because the host's own references are not bound
+   yet when its declaration initialisers run. The PMPS DB is plc-cc-motion.json. *)
 PROGRAM PRG_ATMInit
 VAR
 	{attribute 'TcNcAxis' := 'PRG_ATM_X'}
     axRef         : AXIS_REF;
-    fbPDS         : LCLS_Tc_DevAbs.FB_PersistentDataStorage;
     fbMotor       : FB_MotionStageNC(
         AxisRef                := axRef,
-        iPersistentDataStorage := fbPDS,
+        iPersistentDataStorage := GVL_PRG.fbPDS,
         sName                  := 'INIT'
     );
     aiMotionStage : ARRAY[1..MotionConstants.MAX_STATE_MOTORS] OF I_MotionStage := [fbMotor];
-
-    fbFFHWO    : FB_HardwareFFOutput;
-    fbSubSysIO : FB_DummyArbIO;
-    fbArbiter  : FB_Arbiter(1);
-
-    fbStandardPMPSDB : FB_Standard_PMPSDB(
-        sPlcName   := 'plc-cc-motion',
-        sDirectory := 'C:\TwinCAT\pmpsdb\',
-        io_fbFFHWO := fbFFHWO
-    );
 
     // States of the nested FB_ATM, named and keyed for the PMPS DB below.
     astPositionState : ARRAY[1..MotionConstants.MAX_STATE_MOTORS]
@@ -68,8 +56,8 @@ VAR
     fbHost : FB_ATMInitHost(
         aiMotionStage         := aiMotionStage,
         astPositionState      := astPositionState,
-        fbFFHWO               := fbFFHWO,
-        fbArbiter             := fbArbiter,
+        fbFFHWO               := GVL_PRG.fbFastFaultOutput1,
+        fbArbiter             := GVL_PRG.fbArbiter1,
         sDeviceName           := 'TST:ATMNEST',
         sTransitionKey        := 'TST:ATMNEST-TRANSITION',
         bEnableBeamParams     := TRUE,
@@ -107,19 +95,8 @@ FOR i := 1 TO 6 DO
     afbStatePMPS[i]();
 END_FOR
 
-fbStandardPMPSDB(
-    bEnable := TRUE
-);
-
 fbHost();
-fbPDS();
 fbMotor();
-
-fbSubSysIO(
-    LA  := fbArbiter,
-    FFO := fbFFHWO
-);
-fbFFHWO.Execute();
 ]]></ST>
     </Implementation>
     <LineIds Name="PRG_ATMInit">

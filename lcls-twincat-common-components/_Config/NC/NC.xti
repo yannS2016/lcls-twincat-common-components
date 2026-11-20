@@ -41,5 +41,13 @@
 		<Axis File="COATING_Y.xti" Id="15"/>
 		<Axis File="PRG_ATM_X.xti" Id="17"/>
 		<Axis File="PRG_ATM_Y.xti" Id="16"/>
+		<Axis File="PRG_LIC_Y.xti" Id="24"/>
+		<Axis File="PRG_GBS_Y.xti" Id="25"/>
+		<Axis File="PRG_IPM_Y.xti" Id="26"/>
+		<Axis File="PRG_PPM_Y.xti" Id="27"/>
+		<Axis File="PRG_REF_Y.xti" Id="28"/>
+		<Axis File="PRG_WFS_Y.xti" Id="29"/>
+		<Axis File="PRG_XPIM_Y.xti" Id="30"/>
+		<Axis File="PRG_KBO_Y.xti" Id="31"/>
 	</NC>
 </TcSmItem>

@@ -40,6 +40,35 @@ VAR
         fApertureMargin := 0.01 // -> must be provided here
     );
 
+    (* The logic tests (bridge gating, non-finite requests, M_UpdatePMPS) get an
+       instance of their own, with its own unlinked motors and fast-fault
+       output. They change the request, the trust state and the FFO of the
+       device they run on, so sharing the motion test's instance would leave
+       it with a snapped request and a move already in flight. *)
+    axRefLogic : ARRAY[1..4] OF AXIS_REF;
+    afbMotorLogic : ARRAY[1..4] OF FB_MotionStageNC[
+        (AxisRef := axRefLogic[E_SlitsBlade.TOP],    iPersistentDataStorage := fbPDS, sName := 'TopLogic'),
+        (AxisRef := axRefLogic[E_SlitsBlade.BOTTOM], iPersistentDataStorage := fbPDS, sName := 'BottomLogic'),
+        (AxisRef := axRefLogic[E_SlitsBlade.NORTH],  iPersistentDataStorage := fbPDS, sName := 'NorthLogic'),
+        (AxisRef := axRefLogic[E_SlitsBlade.SOUTH],  iPersistentDataStorage := fbPDS, sName := 'SouthLogic')
+    ];
+    aiMotionStageLogic : ARRAY[1..4] OF I_MotionStage := [
+        afbMotorLogic[E_SlitsBlade.TOP],
+        afbMotorLogic[E_SlitsBlade.BOTTOM],
+        afbMotorLogic[E_SlitsBlade.NORTH],
+        afbMotorLogic[E_SlitsBlade.SOUTH]
+    ];
+    fbFFHWOLogic : FB_HardwareFFOutput;
+    bSimFileReaderBusyLogic : BOOL;
+    fbSlitsLogic : FB_SLITS_POWER(
+        aiMotionStage   := aiMotionStageLogic,
+        fbFFHWO         := fbFFHWOLogic,
+        sDeviceName     := 'SL1L0:POWER',
+        sPmpsState      := 'SL1L0:POWER-RTD',
+        bFileReaderBusy := bSimFileReaderBusyLogic,
+        fApertureMargin := 0.01
+    );
+
     nBlade     : INT;
     bFirstScan : BOOL := TRUE;
     bStageReady : BOOL;
@@ -164,43 +193,43 @@ END_VAR
 
 
 // Establish a trusted limit.
-fbSlitsPower.bBridgeOK := TRUE;
-fbSlitsPower.SetAptWidthHeight(Width := 50.0, Height := 40.0);
-fbSlitsPower.M_UpdateAptTrust();
+fbSlitsLogic.bBridgeOK := TRUE;
+fbSlitsLogic.SetAptWidthHeight(Width := 50.0, Height := 40.0);
+fbSlitsLogic.M_UpdateAptTrust();
 AssertTrue(
-    fbSlitsPower.rTrustedAptWidth = 50.0 AND fbSlitsPower.rTrustedAptHeight = 40.0,
+    fbSlitsLogic.rTrustedAptWidth = 50.0 AND fbSlitsLogic.rTrustedAptHeight = 40.0,
     'trusted limit established before the non-finite readings'
 );
 
 // NaN width: trusted flags stay TRUE but the limit holds.
 uBits.dwBits := 16#7FC00000;
-fbSlitsPower.SetAptRequest(Width := uBits.rValue, Height := 40.0, xOK := TRUE);
-fbSlitsPower.M_UpdateAptTrust();
-AssertTrue(fbSlitsPower.rTrustedAptWidth = 50.0, 'NaN width keeps the last trusted width');
-AssertTrue(fbSlitsPower.rTrustedAptHeight = 40.0, 'NaN width leaves the trusted height alone');
+fbSlitsLogic.SetAptRequest(Width := uBits.rValue, Height := 40.0, xOK := TRUE);
+fbSlitsLogic.M_UpdateAptTrust();
+AssertTrue(fbSlitsLogic.rTrustedAptWidth = 50.0, 'NaN width keeps the last trusted width');
+AssertTrue(fbSlitsLogic.rTrustedAptHeight = 40.0, 'NaN width leaves the trusted height alone');
 
 // +Inf width.
 uBits.dwBits := 16#7F800000;
-fbSlitsPower.SetAptRequest(Width := uBits.rValue, Height := 40.0, xOK := TRUE);
-fbSlitsPower.M_UpdateAptTrust();
-AssertTrue(fbSlitsPower.rTrustedAptWidth = 50.0, '+Inf width keeps the last trusted width');
+fbSlitsLogic.SetAptRequest(Width := uBits.rValue, Height := 40.0, xOK := TRUE);
+fbSlitsLogic.M_UpdateAptTrust();
+AssertTrue(fbSlitsLogic.rTrustedAptWidth = 50.0, '+Inf width keeps the last trusted width');
 
 // -Inf height.
 uBits.dwBits := 16#FF800000;
-fbSlitsPower.SetAptRequest(Width := 50.0, Height := uBits.rValue, xOK := TRUE);
-fbSlitsPower.M_UpdateAptTrust();
-AssertTrue(fbSlitsPower.rTrustedAptHeight = 40.0, '-Inf height keeps the last trusted height');
+fbSlitsLogic.SetAptRequest(Width := 50.0, Height := uBits.rValue, xOK := TRUE);
+fbSlitsLogic.M_UpdateAptTrust();
+AssertTrue(fbSlitsLogic.rTrustedAptHeight = 40.0, '-Inf height keeps the last trusted height');
 
 // Finite values are accepted again.
-fbSlitsPower.SetAptWidthHeight(Width := 60.0, Height := 45.0);
-fbSlitsPower.M_UpdateAptTrust();
+fbSlitsLogic.SetAptWidthHeight(Width := 60.0, Height := 45.0);
+fbSlitsLogic.M_UpdateAptTrust();
 AssertTrue(
-    fbSlitsPower.rTrustedAptWidth = 60.0 AND fbSlitsPower.rTrustedAptHeight = 45.0,
+    fbSlitsLogic.rTrustedAptWidth = 60.0 AND fbSlitsLogic.rTrustedAptHeight = 45.0,
     'finite request is trusted again after the non-finite readings'
 );
 
 // Leave the shared instance in a healthy, wide-open state.
-fbSlitsPower.SetAptWidthHeight(Width := 100.0, Height := 100.0);
+fbSlitsLogic.SetAptWidthHeight(Width := 100.0, Height := 100.0);
 TEST_FINISHED();
 ]]></ST>
       </Implementation>
@@ -217,31 +246,31 @@ METHOD TestBridgeGating
         <ST><![CDATA[TEST('TestSlitsBridgeGating');
 
 // Healthy bridge and xOK: the request becomes the trusted limit.
-fbSlitsPower.bBridgeOK := TRUE;
-fbSlitsPower.SetAptWidthHeight(Width := 50.0, Height := 40.0);
-fbSlitsPower.M_UpdateAptTrust();
-AssertTrue(fbSlitsPower.bAptTrusted, 'request trusted with bridge ok and xOK');
+fbSlitsLogic.bBridgeOK := TRUE;
+fbSlitsLogic.SetAptWidthHeight(Width := 50.0, Height := 40.0);
+fbSlitsLogic.M_UpdateAptTrust();
+AssertTrue(fbSlitsLogic.bAptTrusted, 'request trusted with bridge ok and xOK');
 AssertTrue(
-    fbSlitsPower.rTrustedAptWidth = 50.0 AND fbSlitsPower.rTrustedAptHeight = 40.0,
+    fbSlitsLogic.rTrustedAptWidth = 50.0 AND fbSlitsLogic.rTrustedAptHeight = 40.0,
     'trusted limit latched from the request'
 );
 
 // xOK drops while the width changes: the last trusted limit holds.
-fbSlitsPower.SetAptRequest(Width := 10.0, Height := 40.0, xOK := FALSE);
-fbSlitsPower.M_UpdateAptTrust();
-AssertFalse(fbSlitsPower.bAptTrusted, 'request untrusted when xOK is FALSE');
-AssertTrue(fbSlitsPower.rTrustedAptWidth = 50.0, 'untrusted xOK keeps the last trusted width');
+fbSlitsLogic.SetAptRequest(Width := 10.0, Height := 40.0, xOK := FALSE);
+fbSlitsLogic.M_UpdateAptTrust();
+AssertFalse(fbSlitsLogic.bAptTrusted, 'request untrusted when xOK is FALSE');
+AssertTrue(fbSlitsLogic.rTrustedAptWidth = 50.0, 'untrusted xOK keeps the last trusted width');
 
 // Bridge down with xOK TRUE: still untrusted.
-fbSlitsPower.SetAptRequest(Width := 10.0, Height := 40.0, xOK := TRUE);
-fbSlitsPower.bBridgeOK := FALSE;
-fbSlitsPower.M_UpdateAptTrust();
-AssertFalse(fbSlitsPower.bAptTrusted, 'request untrusted when the bridge is down');
-AssertTrue(fbSlitsPower.rTrustedAptWidth = 50.0, 'bridge down keeps the last trusted width');
+fbSlitsLogic.SetAptRequest(Width := 10.0, Height := 40.0, xOK := TRUE);
+fbSlitsLogic.bBridgeOK := FALSE;
+fbSlitsLogic.M_UpdateAptTrust();
+AssertFalse(fbSlitsLogic.bAptTrusted, 'request untrusted when the bridge is down');
+AssertTrue(fbSlitsLogic.rTrustedAptWidth = 50.0, 'bridge down keeps the last trusted width');
 
 // Leave the shared instance in a healthy, wide-open state.
-fbSlitsPower.bBridgeOK := TRUE;
-fbSlitsPower.SetAptWidthHeight(Width := 100.0, Height := 100.0);
+fbSlitsLogic.bBridgeOK := TRUE;
+fbSlitsLogic.SetAptWidthHeight(Width := 100.0, Height := 100.0);
 TEST_FINISHED();
 ]]></ST>
       </Implementation>
@@ -256,35 +285,35 @@ METHOD TestUpdatePMPS
 
 PMPS_GVL.stCurrentBeamParameters.astApertures[1].Width  := 100.0;
 PMPS_GVL.stCurrentBeamParameters.astApertures[1].Height := 100.0;
-fbSlitsPower.bBridgeOK := TRUE;
-fbSlitsPower.bBridgeConfirmedBad := FALSE;
-fbSlitsPower.xPMPSMode := TRUE;
-fbSlitsPower.SetAptWidthHeight(Width := 50.0, Height := 40.0);
+fbSlitsLogic.bBridgeOK := TRUE;
+fbSlitsLogic.bBridgeConfirmedBad := FALSE;
+fbSlitsLogic.xPMPSMode := TRUE;
+fbSlitsLogic.SetAptWidthHeight(Width := 50.0, Height := 40.0);
 
 // Inside the authorized envelope.
-fbSlitsPower.SetActualAperture(ApertureSizeX := 20.0, ApertureSizeY := 10.0, CenterX := 0.0, CenterY := 0.0);
-fbSlitsPower.M_UpdatePMPS(1);
-AssertTrue(fbSlitsPower.FFO.i_xOK, 'gap inside the trusted request leaves the FFO ok');
+fbSlitsLogic.SetActualAperture(ApertureSizeX := 20.0, ApertureSizeY := 10.0, CenterX := 0.0, CenterY := 0.0);
+fbSlitsLogic.M_UpdatePMPS(1);
+AssertTrue(fbSlitsLogic.FFO.i_xOK, 'gap inside the trusted request leaves the FFO ok');
 AssertTrue(
-    fbSlitsPower.AptArrayStatus.Width = 20.0 AND fbSlitsPower.AptArrayStatus.Height = 10.0,
+    fbSlitsLogic.AptArrayStatus.Width = 20.0 AND fbSlitsLogic.AptArrayStatus.Height = 10.0,
     'actual gap mirrored into AptArrayStatus'
 );
 
 // Actual X gap above the trusted width: fault and snap the request back.
-fbSlitsPower.SetActualAperture(ApertureSizeX := 60.0, ApertureSizeY := 10.0, CenterX := 0.0, CenterY := 0.0);
-fbSlitsPower.M_UpdatePMPS(1);
-AssertFalse(fbSlitsPower.FFO.i_xOK, 'gap above the trusted request faults the FFO');
-AssertTrue(fbSlitsPower.rReqApertureSizeX = 49.99, 'request snapped to the trusted width minus the margin');
+fbSlitsLogic.SetActualAperture(ApertureSizeX := 60.0, ApertureSizeY := 10.0, CenterX := 0.0, CenterY := 0.0);
+fbSlitsLogic.M_UpdatePMPS(1);
+AssertFalse(fbSlitsLogic.FFO.i_xOK, 'gap above the trusted request faults the FFO');
+AssertTrue(fbSlitsLogic.rReqApertureSizeX = 49.99, 'request snapped to the trusted width minus the margin');
 
 // Local mode always faults.
-fbSlitsPower.SetActualAperture(ApertureSizeX := 20.0, ApertureSizeY := 10.0, CenterX := 0.0, CenterY := 0.0);
-fbSlitsPower.xPMPSMode := FALSE;
-fbSlitsPower.M_UpdatePMPS(1);
-AssertFalse(fbSlitsPower.FFO.i_xOK, 'Local mode faults the FFO');
+fbSlitsLogic.SetActualAperture(ApertureSizeX := 20.0, ApertureSizeY := 10.0, CenterX := 0.0, CenterY := 0.0);
+fbSlitsLogic.xPMPSMode := FALSE;
+fbSlitsLogic.M_UpdatePMPS(1);
+AssertFalse(fbSlitsLogic.FFO.i_xOK, 'Local mode faults the FFO');
 
 // Leave the shared instance in PMPS mode, healthy and wide open.
-fbSlitsPower.xPMPSMode := TRUE;
-fbSlitsPower.SetAptWidthHeight(Width := 100.0, Height := 100.0);
+fbSlitsLogic.xPMPSMode := TRUE;
+fbSlitsLogic.SetAptWidthHeight(Width := 100.0, Height := 100.0);
 TEST_FINISHED();
 ]]></ST>
       </Implementation>

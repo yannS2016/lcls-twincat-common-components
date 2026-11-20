@@ -93,6 +93,9 @@
     <Compile Include="Devices\Coating\E_Coating_States.TcDUT">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Devices\Coating\FB_Coating_States_NoPMPS_Core.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Devices\Coating\FB_Coating_States_NoPMPS.TcPOU">
       <SubType>Code</SubType>
     </Compile>

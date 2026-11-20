@@ -53,9 +53,6 @@
     <Compile Include="Devices\ATM\FB_ATM.TcPOU">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="POUs\FB_CC_DeviceCore.TcPOU">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="Devices\ATM\FB_ATM_Core.TcPOU">
       <SubType>Code</SubType>
     </Compile>

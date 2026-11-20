@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <TcPlcObject Version="1.1.0.1">
-  <POU Name="FB_GBS_Core" Id="{38537169-4b0a-4a46-a9ab-3884c1db615b}" SpecialFunc="None">
+  <POU Name="FB_GBS_Core" Id="{8252bf2a-27c7-45c6-bd37-a2c40aca32bb}" SpecialFunc="None">
     <Declaration><![CDATA[(* Grating Beam Splitter (GBS) core, an abstract base by convention: thin
    ND-framework state-mover wrapper that holds only references, interfaces, the
    sub-FBs and fbStates. The state bridge is here as REFERENCE TO UINT
@@ -121,7 +121,7 @@ fbRTD2(
     io_fbFFHWO      := fbFFHWO
 );]]></ST>
     </Implementation>
-    <Method Name="CallAfterInit" Id="{12ed97d0-9b44-4037-9904-f5e2d582d7bc}">
+    <Method Name="CallAfterInit" Id="{7d1092ed-2016-4f30-9f9a-9b893f7e7a60}">
       <Declaration><![CDATA[(* Auto-fired after FB_Init. Wires fbStates through CallAfterInitCore. *)
 {attribute 'call_after_init'}
 METHOD CallAfterInit
@@ -131,7 +131,7 @@ METHOD CallAfterInit
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="CallAfterInitCore" Id="{3ba03c05-f1be-4ec5-a50f-df73c1c6aba9}">
+    <Method Name="CallAfterInitCore" Id="{8e51230c-3a09-4fc8-9ee6-f265f07923f6}">
       <Declaration><![CDATA[(* Wires fbStates with the references this FB holds, through
    CallAfterInitStateMover / CallAfterInitPMPS, because fbStates' inline-init
    ran first and forwarded nil refs. Does nothing while the essential refs are
@@ -173,7 +173,7 @@ THIS^.fbStates.CallAfterInitPMPS(
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="FB_Init" Id="{7ab55017-f687-4f5f-9448-bd10e1e4c218}">
+    <Method Name="FB_Init" Id="{d593a210-d153-4bd9-848b-36e81aa0fcb1}">
       <Declaration><![CDATA[(* Stores FB_Init inputs into instance fields; every non-value input is
    REFERENCE TO, REF= bound for the FB lifetime. fbStates inline-init
    captured these params at construction, so this records the same refs

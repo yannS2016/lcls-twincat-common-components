@@ -68,6 +68,9 @@
     <Compile Include="Devices\PPM\E_PPM_States.TcDUT">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Devices\PPM\FB_PPM_Core.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Devices\PPM\FB_PPM.TcPOU">
       <SubType>Code</SubType>
     </Compile>

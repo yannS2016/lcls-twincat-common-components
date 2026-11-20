@@ -47,7 +47,11 @@ VAR
         bEnablePositionLimits := TRUE,
         bReadDBNow            := TRUE,
         bFileReaderBusy       := bFileReaderBusy,
-        bFileReaderError      := bFileReaderError
+        bFileReaderError      := bFileReaderError,
+        fResponsivity         := 0.05,
+        iTermBits             := 15,
+        fTermMax              := 10000,
+        fTermMin              := 0
     );
 
     (* Per-install PMPS-side state config (caller-owned). Mirrors what

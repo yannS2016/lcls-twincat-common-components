@@ -59,6 +59,9 @@
     <Compile Include="Devices\LIC\E_LIC_States.TcDUT">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Devices\LIC\FB_LIC_Core.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Devices\LIC\FB_LIC.TcPOU">
       <SubType>Code</SubType>
     </Compile>

@@ -41,7 +41,10 @@ TestUnlimitedGap();
     </Implementation>
     <Method Name="CheckCase" Id="{663c1d5c-a74a-4d7f-b042-33f8954cc6ac}">
       <Declaration><![CDATA[(* Sets the actual gap and the PMPS aperture, runs M_CheckPMPS and asserts the
-   FFO state. bExpectOk is the expected FFO.i_xOK. *)
+   FFO state. bExpectOk is the expected FFO.i_xOK. The aperture lives in the
+   global PMPS_GVL, which library code compares every cycle (F_SafeBPCompare);
+   a NaN left there faults the PLC. So the previous values are put back before
+   the method returns, in the same cycle. *)
 METHOD CheckCase
 VAR_INPUT
     fActX     : REAL;
@@ -51,13 +54,23 @@ VAR_INPUT
     bExpectOk : BOOL;
     sMessage  : STRING;
 END_VAR
+VAR
+    fSavedWidth  : REAL;
+    fSavedHeight : REAL;
+END_VAR
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[PMPS_GVL.stCurrentBeamParameters.astApertures[2].Width  := fPmpsW;
+        <ST><![CDATA[fSavedWidth  := PMPS_GVL.stCurrentBeamParameters.astApertures[2].Width;
+fSavedHeight := PMPS_GVL.stCurrentBeamParameters.astApertures[2].Height;
+
+PMPS_GVL.stCurrentBeamParameters.astApertures[2].Width  := fPmpsW;
 PMPS_GVL.stCurrentBeamParameters.astApertures[2].Height := fPmpsH;
 fbSlits.SetActualAperture(ApertureSizeX := fActX, ApertureSizeY := fActY, CenterX := 0.0, CenterY := 0.0);
 fbSlits.M_CheckPMPS(2);
 AssertTrue(fbSlits.FFO.i_xOK = bExpectOk, sMessage);
+
+PMPS_GVL.stCurrentBeamParameters.astApertures[2].Width  := fSavedWidth;
+PMPS_GVL.stCurrentBeamParameters.astApertures[2].Height := fSavedHeight;
 ]]></ST>
       </Implementation>
     </Method>

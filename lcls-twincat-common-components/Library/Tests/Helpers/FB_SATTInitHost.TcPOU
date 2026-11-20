@@ -7,7 +7,7 @@
    empty values. CallAfterInit re-supplies all of them through
    fbSATT.CallAfterInitSATT. *)
 {attribute 'call_after_init'}
-FUNCTION_BLOCK FB_SATTInitHost IMPLEMENTS I_SATTFilters
+FUNCTION_BLOCK FB_SATTInitHost
 VAR
     {attribute 'no_copy'}
     aiMotionStage         : REFERENCE TO ARRAY[1..MotionConstants.MAX_STATE_MOTORS] OF I_MotionStage;
@@ -29,6 +29,20 @@ VAR
         sDeviceName           := sDeviceName,
         RTDPMPSState          := RTDPMPSState
     );
+
+    (* Per-filter material and thickness written into the stage's filter table.
+       iFilters is the stage declared above, a constructed FB and not a nil
+       reference, so the configurators can be built here. *)
+    afbFilterCfg : ARRAY[1..8] OF FB_SATT_FilterConfig[
+        (iFilters := fbSATT, nIndex := 1, sFilterMaterial := 'C',  fFilterThickness_um := 25),
+        (iFilters := fbSATT, nIndex := 2, sFilterMaterial := 'C',  fFilterThickness_um := 50),
+        (iFilters := fbSATT, nIndex := 3, sFilterMaterial := 'C',  fFilterThickness_um := 100),
+        (iFilters := fbSATT, nIndex := 4, sFilterMaterial := 'Si', fFilterThickness_um := 200),
+        (iFilters := fbSATT, nIndex := 5, sFilterMaterial := 'Si', fFilterThickness_um := 320),
+        (iFilters := fbSATT, nIndex := 6, sFilterMaterial := 'Si', fFilterThickness_um := 640),
+        (iFilters := fbSATT, nIndex := 7, sFilterMaterial := 'Si', fFilterThickness_um := 1280),
+        (iFilters := fbSATT, nIndex := 8, sFilterMaterial := 'Si', fFilterThickness_um := 2560)
+    ];
 END_VAR
 ]]></Declaration>
     <Implementation>
@@ -75,25 +89,6 @@ THIS^.bFileReaderBusy  REF= bFileReaderBusy;
 THIS^.fbFFHWO          REF= fbFFHWO;
 THIS^.sDeviceName      := sDeviceName;
 THIS^.RTDPMPSState     := RTDPMPSState;]]></ST>
-      </Implementation>
-    </Method>
-    <Method Name="SetFilter" Id="{b15037bf-87b1-4976-b534-a3b825ecb486}">
-      <Declaration><![CDATA[(* I_SATTFilters: forwards to the nested stage, so a configurator can fill the
-   filter table through this host. *)
-METHOD SetFilter
-VAR_INPUT
-    Index         : UINT;
-    Material      : STRING;
-    Thickness_um  : LREAL;
-END_VAR
-]]></Declaration>
-      <Implementation>
-        <ST><![CDATA[fbSATT.SetFilter(
-    Index        := Index,
-    Material     := Material,
-    Thickness_um := Thickness_um
-);
-]]></ST>
       </Implementation>
     </Method>
   </POU>

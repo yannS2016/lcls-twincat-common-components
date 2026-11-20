@@ -11,21 +11,51 @@ VAR
         .axRef[2] := ATM_Y
     '}
     fbATMTest: FB_ATMTest;
-//    fbATMInitTest: FB_ATMInitTest;
-//     fbGBSTest: FB_GBSTest;
-//     fbIPMTest: FB_IPMTest;
+    {attribute 'TcNcAxis' := '
+        .axRef := GBS_Y;
+    '}
+	fbGBSTest: FB_GBSTest;
+    {attribute 'TcNcAxis' := '
+        .axRef[1] := IPM_X;
+        .axRef[2] := IPM_Y
+    '}
+	fbIPMTest: FB_IPMTest;
+    {attribute 'TcNcAxis' := '
+        .axRef := LIC_Y;
+    '}
+	fbLICTest: FB_LICTest;
+    {attribute 'TcNcAxis' := '
+        .axRef := PPM_Y;
+    '}
+	fbPPMTest: FB_PPMTest;
+    {attribute 'TcNcAxis' := '
+        .axRef[1] := REF_X;
+        .axRef[2] := REF_Y
+    '}
+	fbREFTest: FB_REFTest;
+    {attribute 'TcNcAxis' := '
+        .axRef := SATT_Y;
+    '}
+	fbSATTTest: FB_SATTTest;
+    {attribute 'TcNcAxis' := '
+        .axRef[1] := WFS_Z;
+        .axRef[2] := WFS_Y
+    '}
+	fbWFSTest: FB_WFSTest;
+    {attribute 'TcNcAxis' := '
+        .axRef[1] := XPIM_Z;
+        .axRef[2] := XPIM_F;
+        .axRef[3] := XPIM_Y
+    '}
+	fbXPIMTest: FB_XPIMTest;
+	fbCCTempSensorTest: FB_CC_TempSensorTest;
 //     fbKBOTest: FB_KBOTest;
 //     fbCoatingNoPMPSTest: FB_Coating_States_NoPMPSTest;
-//     fbLICTest: FB_LICTest;
-//     fbPPMTest: FB_PPMTest;
-//     fbREFTest: FB_REFTest;
-//     fbSATTTest: FB_SATTTest;
 //     fbSlitsTest: FB_SLITSTest;
 //     fbSlitsPowerTest: FB_SLITS_POWERTest;
 //     fbSlitsThermalTest: FB_SLITS_THERMALTest;
-//     fbWFSTest: FB_WFSTest;
-//     fbXPIMTest: FB_XPIMTest;
-//     fbCCTempSensorTest: FB_CC_TempSensorTest;
+
+
 
 
 END_VAR
@@ -34,5 +64,9 @@ END_VAR
       <ST><![CDATA[// Run the tests
 TcUnit.RUN();]]></ST>
     </Implementation>
+    <LineIds Name="PRG_TEST">
+      <LineId Id="3" Count="0" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
   </POU>
 </TcPlcObject>

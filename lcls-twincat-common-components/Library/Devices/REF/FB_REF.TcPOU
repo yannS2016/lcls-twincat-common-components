@@ -43,7 +43,7 @@ END_VAR]]></Declaration>
     <Implementation>
       <ST><![CDATA[SUPER^();]]></ST>
     </Implementation>
-    <Method Name="CallAfterInit" Id="{2f5a266d-a319-48e1-b797-55a7489c8359}">
+    <Method Name="CallAfterInit" Id="{a0ee463e-f33e-4866-8926-cafd14b191fc}">
       <Declaration><![CDATA[(* Auto-fired after FB_Init, together with the base CallAfterInit. Binds the
    state bridge to this FB's enum variables and initializes the states. *)
 {attribute 'call_after_init'}
@@ -57,7 +57,7 @@ THIS^.InitStateDefaults();
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="CallAfterInitREF" Id="{8a40c3bc-e5b7-47ec-8c6d-2ba5964f68de}">
+    <Method Name="CallAfterInitREF" Id="{03bd6d30-9440-418b-954f-e154d2a0a64e}">
       <Declaration><![CDATA[(* Provides every FB_REF_Core input, binds the state bridge, initializes the
    states through InitStateDefaults and wires fbStates. FB_Init calls it with the PRG arguments. An FB
    that instantiates FB_REF inside itself calls it again from its own
@@ -134,26 +134,7 @@ END_VAR
         </Implementation>
       </Set>
     </Property>
-    <Property Name="MaintMode" Id="{666c9def-1031-444c-b052-5be27153dffd}">
-      <Declaration><![CDATA[PROPERTY MaintMode : BOOL]]></Declaration>
-      <Get Name="Get" Id="{e61914cd-8c2b-465a-8c3f-ee9ed709699d}">
-        <Declaration><![CDATA[VAR
-END_VAR
-]]></Declaration>
-        <Implementation>
-          <ST><![CDATA[MaintMode := fbStates.stPMPSEpicsToPlc.bMaintMode;]]></ST>
-        </Implementation>
-      </Get>
-      <Set Name="Set" Id="{14311ec0-b236-48d5-af42-be1d3ad373fa}">
-        <Declaration><![CDATA[VAR
-END_VAR
-]]></Declaration>
-        <Implementation>
-          <ST><![CDATA[fbStates.stPMPSEpicsToPlc.bMaintMode := MaintMode;]]></ST>
-        </Implementation>
-      </Set>
-    </Property>
-    <Method Name="FB_Init" Id="{4d59ebc2-c21f-4355-9b6d-75854f0da2d1}">
+    <Method Name="FB_Init" Id="{221e107e-b52d-4dd0-80de-0972c2ede46b}">
       <Declaration><![CDATA[(* Repeats the eleven FB_REF_Core inputs, as a derived FB_Init must, and
    forwards them to CallAfterInitREF, which provides them to the base, binds
    the state bridge and wires the states. Runs before any CallAfterInit. *)
@@ -194,7 +175,7 @@ THIS^.CallAfterInitREF(
 );]]></ST>
       </Implementation>
     </Method>
-    <Method Name="InitStateDefaults" Id="{373c20ba-9556-4e57-8253-77c7553df9bd}">
+    <Method Name="InitStateDefaults" Id="{9cad01cc-b6fd-4bc6-83aa-3977d8ed518c}">
       <Declaration><![CDATA[(* Full init of every state of astPositionState: gives it its name (sName) and
    its in-position tolerance (fDelta, FDELTA_DEFAULT) by running afbStateDefaults. astPositionState belongs to the caller, so the
    configurators can only be given the slots once this FB holds the caller's
@@ -219,5 +200,58 @@ afbStateDefaults[2].CallAfterInit(
 ]]></ST>
       </Implementation>
     </Method>
+    <Property Name="MaintMode" Id="{666c9def-1031-444c-b052-5be27153dffd}">
+      <Declaration><![CDATA[PROPERTY MaintMode : BOOL]]></Declaration>
+      <Get Name="Get" Id="{e61914cd-8c2b-465a-8c3f-ee9ed709699d}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[MaintMode := fbStates.stPMPSEpicsToPlc.bMaintMode;]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{14311ec0-b236-48d5-af42-be1d3ad373fa}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[fbStates.stPMPSEpicsToPlc.bMaintMode := MaintMode;]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <LineIds Name="FB_REF">
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_REF.CallAfterInit">
+      <LineId Id="3" Count="3" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_REF.CallAfterInitREF">
+      <LineId Id="3" Count="16" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_REF.EnumGet.Get">
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_REF.EnumSet.Get">
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_REF.EnumSet.Set">
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_REF.FB_Init">
+      <LineId Id="3" Count="13" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_REF.InitStateDefaults">
+      <LineId Id="3" Count="9" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_REF.MaintMode.Get">
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_REF.MaintMode.Set">
+      <LineId Id="2" Count="0" />
+    </LineIds>
   </POU>
 </TcPlcObject>

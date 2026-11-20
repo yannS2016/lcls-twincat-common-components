@@ -18,15 +18,20 @@
 		</SvbTask>
 		<AxisFolder Name="UnitTests"/>
 		<AxisFolder Name="PRG"/>
+		<Axis File="IPM_X.xti" Id="19"/>
 		<Axis File="IPM_Y.xti" Id="13"/>
 		<Axis File="GBS_Y.xti" Id="12"/>
 		<Axis File="ATM_X.xti" Id="18"/>
 		<Axis File="ATM_Y.xti" Id="1"/>
 		<Axis File="LIC_Y.xti" Id="2"/>
 		<Axis File="PPM_Y.xti" Id="3"/>
+		<Axis File="REF_X.xti" Id="20"/>
 		<Axis File="REF_Y.xti" Id="4"/>
 		<Axis File="SATT_Y.xti" Id="7"/>
+		<Axis File="WFS_Z.xti" Id="21"/>
 		<Axis File="WFS_Y.xti" Id="5"/>
+		<Axis File="XPIM_F.xti" Id="23"/>
+		<Axis File="XPIM_Z.xti" Id="22"/>
 		<Axis File="XPIM_Y.xti" Id="6"/>
 		<Axis File="SLIT_Bottom.xti" Id="9"/>
 		<Axis File="SLIT_North.xti" Id="10"/>

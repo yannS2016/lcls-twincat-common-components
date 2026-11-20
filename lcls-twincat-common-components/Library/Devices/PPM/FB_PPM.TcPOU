@@ -78,7 +78,7 @@ fbPowerMeter(
     stYAxisState := aiMotionStage[1].Axis.NcToPlc.AxisState
 );]]></ST>
     </Implementation>
-    <Method Name="CallAfterInit" Id="{2f5a266d-a319-48e1-b797-55a7489c8359}">
+    <Method Name="CallAfterInit" Id="{fdbf7a93-7d53-46b3-a8dd-92d5bbadf0a1}">
       <Declaration><![CDATA[(* Auto-fired after FB_Init, together with the base CallAfterInit. Binds the
    state bridge to this FB's enum variables and initializes the states. *)
 {attribute 'call_after_init'}
@@ -92,7 +92,7 @@ THIS^.InitStateDefaults();
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="CallAfterInitPPM" Id="{8a40c3bc-e5b7-47ec-8c6d-2ba5964f68de}">
+    <Method Name="CallAfterInitPPM" Id="{4e388afc-47d9-49b3-800a-9726601ad89e}">
       <Declaration><![CDATA[(* Provides every FB_PPM_Core input, binds the state bridge, initializes the
    states through InitStateDefaults, wires fbStates and configures the power
    meter from the stored calibration. FB_Init calls it with the PRG arguments. An FB
@@ -177,7 +177,7 @@ END_VAR
         </Implementation>
       </Set>
     </Property>
-    <Method Name="FB_Init" Id="{4d59ebc2-c21f-4355-9b6d-75854f0da2d1}">
+    <Method Name="FB_Init" Id="{b7072410-6042-48bb-ba4a-b765b0e46f89}">
       <Declaration><![CDATA[(* Repeats the eleven FB_PPM_Core inputs, as a derived FB_Init must, and
    forwards them to CallAfterInitPPM, which provides them to the base, binds
    the state bridge and wires the states. Runs before any CallAfterInit. *)
@@ -224,7 +224,7 @@ THIS^.CallAfterInitPPM(
 );]]></ST>
       </Implementation>
     </Method>
-    <Method Name="InitStateDefaults" Id="{373c20ba-9556-4e57-8253-77c7553df9bd}">
+    <Method Name="InitStateDefaults" Id="{f100856c-d13d-4335-bf2b-8c71776cff60}">
       <Declaration><![CDATA[(* Full init of every state of astPositionState: gives it its name (sName) and
    its in-position tolerance (fDelta, FDELTA_DEFAULT) by running afbStateDefaults. astPositionState belongs to the caller, so the
    configurators can only be given the slots once this FB holds the caller's
@@ -255,5 +255,34 @@ afbStateDefaults[4].CallAfterInit(
 ]]></ST>
       </Implementation>
     </Method>
+    <LineIds Name="FB_PPM">
+      <LineId Id="3" Count="15" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_PPM.CallAfterInit">
+      <LineId Id="3" Count="3" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_PPM.CallAfterInitPPM">
+      <LineId Id="3" Count="23" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_PPM.EnumGet.Get">
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_PPM.EnumSet.Get">
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_PPM.EnumSet.Set">
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_PPM.FB_Init">
+      <LineId Id="3" Count="16" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_PPM.InitStateDefaults">
+      <LineId Id="3" Count="15" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
   </POU>
 </TcPlcObject>

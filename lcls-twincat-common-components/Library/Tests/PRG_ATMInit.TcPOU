@@ -26,7 +26,7 @@ VAR
 
     fbStandardPMPSDB : FB_Standard_PMPSDB(
         sPlcName   := 'plc-cc-motion',
-        sDirectory := '/home/ecs-user/pmpsdb/',
+        sDirectory := 'C:\TwinCAT\pmpsdb\',
         io_fbFFHWO := fbFFHWO
     );
 
@@ -122,5 +122,9 @@ fbSubSysIO(
 fbFFHWO.Execute();
 ]]></ST>
     </Implementation>
+    <LineIds Name="PRG_ATMInit">
+      <LineId Id="3" Count="35" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
   </POU>
 </TcPlcObject>

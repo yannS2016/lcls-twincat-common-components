@@ -50,7 +50,7 @@ END_VAR]]></Declaration>
     <Implementation>
       <ST><![CDATA[SUPER^();]]></ST>
     </Implementation>
-    <Method Name="CallAfterInit" Id="{2f5a266d-a319-48e1-b797-55a7489c8359}">
+    <Method Name="CallAfterInit" Id="{8fe647e0-9fbb-42a5-98db-65237aeecdea}">
       <Declaration><![CDATA[(* Auto-fired after FB_Init, together with the base CallAfterInit. Binds the
    state bridge to this FB's enum variables and initializes the states. *)
 {attribute 'call_after_init'}
@@ -64,7 +64,7 @@ THIS^.InitStateDefaults();
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="CallAfterInitLIC" Id="{8a40c3bc-e5b7-47ec-8c6d-2ba5964f68de}">
+    <Method Name="CallAfterInitLIC" Id="{81a241a6-da0c-4f79-a041-281e892a271c}">
       <Declaration><![CDATA[(* Provides every FB_LIC_Core input, binds the state bridge, initializes the
    states through InitStateDefaults and wires fbStates. FB_Init calls it with the PRG arguments. An FB
    that instantiates FB_LIC inside itself calls it again from its own
@@ -108,10 +108,10 @@ SUPER^.CallAfterInitCore();
 ]]></ST>
       </Implementation>
     </Method>
-    <Property Name="EnumGet" Id="{15313ef5-dd3a-44f9-a68a-27060a7cd2ff}">
+    <Property Name="EnumGet" Id="{f9f0e242-27d9-4268-87b1-1a2cc20b1fcb}">
       <Declaration><![CDATA[(* Current position state. Read-only; written by the state mover. *)
 PROPERTY EnumGet : E_LIC_States]]></Declaration>
-      <Get Name="Get" Id="{f0b1821b-d1dc-41ec-9f21-f65079e6a42a}">
+      <Get Name="Get" Id="{07329de7-47ef-4584-9243-7a8d4feede67}">
         <Declaration><![CDATA[VAR
 END_VAR
 ]]></Declaration>
@@ -120,11 +120,11 @@ END_VAR
         </Implementation>
       </Get>
     </Property>
-    <Property Name="EnumSet" Id="{d6867564-423e-4de5-8672-3b648d7df078}">
+    <Property Name="EnumSet" Id="{cb039abb-54b6-4f90-91ad-138b593ea5b1}">
       <Declaration><![CDATA[(* Request a new move, e.g. `fbLIC.EnumSet := E_LIC_States.MIRROR1;`.
    The state mover consumes and clears the request. *)
 PROPERTY EnumSet : E_LIC_States]]></Declaration>
-      <Get Name="Get" Id="{9fcfe38e-096e-4ba8-8d70-7fd16ad47420}">
+      <Get Name="Get" Id="{cdec30fb-4ed1-46b0-9100-8d9c9883cfde}">
         <Declaration><![CDATA[VAR
 END_VAR
 ]]></Declaration>
@@ -132,7 +132,7 @@ END_VAR
           <ST><![CDATA[EnumSet := eEnumSet;]]></ST>
         </Implementation>
       </Get>
-      <Set Name="Set" Id="{bcf7d591-82dd-413a-95e8-044611b7da05}">
+      <Set Name="Set" Id="{a6bb0b42-3ec1-4ee0-9460-d255c8b95773}">
         <Declaration><![CDATA[VAR
 END_VAR
 ]]></Declaration>
@@ -141,7 +141,7 @@ END_VAR
         </Implementation>
       </Set>
     </Property>
-    <Method Name="FB_Init" Id="{4d59ebc2-c21f-4355-9b6d-75854f0da2d1}">
+    <Method Name="FB_Init" Id="{1f2b00ac-9036-4248-a9b0-1eef50a3df6c}">
       <Declaration><![CDATA[(* Repeats the eleven FB_LIC_Core inputs, as a derived FB_Init must, and
    forwards them to CallAfterInitLIC, which provides them to the base, binds
    the state bridge and wires the states. Runs before any CallAfterInit. *)
@@ -179,7 +179,7 @@ END_VAR]]></Declaration>
 );]]></ST>
       </Implementation>
     </Method>
-    <Method Name="InitStateDefaults" Id="{373c20ba-9556-4e57-8253-77c7553df9bd}">
+    <Method Name="InitStateDefaults" Id="{5cad8c5d-b1bb-4143-bff7-29d1ba229f01}">
       <Declaration><![CDATA[(* Full init of every state of astPositionState: gives it its name (sName) and
    its in-position tolerance (fDelta, FDELTA_DEFAULT) by running afbStateDefaults. astPositionState belongs to the caller, so the
    configurators can only be given the slots once this FB holds the caller's
@@ -210,5 +210,33 @@ afbStateDefaults[4].CallAfterInit(
 ]]></ST>
       </Implementation>
     </Method>
+    <LineIds Name="FB_LIC">
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_LIC.CallAfterInit">
+      <LineId Id="3" Count="3" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_LIC.CallAfterInitLIC">
+      <LineId Id="3" Count="16" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_LIC.EnumGet.Get">
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_LIC.EnumSet.Get">
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_LIC.EnumSet.Set">
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_LIC.FB_Init">
+      <LineId Id="3" Count="11" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_LIC.InitStateDefaults">
+      <LineId Id="3" Count="15" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
   </POU>
 </TcPlcObject>

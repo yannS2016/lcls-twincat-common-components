@@ -67,7 +67,7 @@ END_VAR]]></Declaration>
     <Implementation>
       <ST><![CDATA[SUPER^();]]></ST>
     </Implementation>
-    <Method Name="CallAfterInit" Id="{2f5a266d-a319-48e1-b797-55a7489c8359}">
+    <Method Name="CallAfterInit" Id="{fcf1a5a9-34c3-4e78-bdde-7e886f93a41d}">
       <Declaration><![CDATA[(* Auto-fired after FB_Init, together with the base CallAfterInit. Binds the
    state bridge to this FB's enum variables and initializes the states. *)
 {attribute 'call_after_init'}
@@ -81,7 +81,7 @@ THIS^.InitStateDefaults();
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="CallAfterInitGBS" Id="{8a40c3bc-e5b7-47ec-8c6d-2ba5964f68de}">
+    <Method Name="CallAfterInitGBS" Id="{7da40282-e93d-46e9-89d8-eb281966e022}">
       <Declaration><![CDATA[(* Provides every FB_GBS_Core input, binds the state bridge, initializes the
    states through InitStateDefaults and wires fbStates. FB_Init calls it with the PRG arguments. An FB
    that instantiates FB_GBS inside itself calls it again from its own
@@ -158,7 +158,7 @@ END_VAR
         </Implementation>
       </Set>
     </Property>
-    <Method Name="FB_Init" Id="{4d59ebc2-c21f-4355-9b6d-75854f0da2d1}">
+    <Method Name="FB_Init" Id="{939dbb15-97ee-44cd-be1c-bc8f83bac513}">
       <Declaration><![CDATA[(* Repeats the eleven FB_GBS_Core inputs, as a derived FB_Init must, and
    forwards them to CallAfterInitGBS, which provides them to the base, binds
    the state bridge and wires the states. Runs before any CallAfterInit. *)
@@ -196,7 +196,7 @@ END_VAR]]></Declaration>
 );]]></ST>
       </Implementation>
     </Method>
-    <Method Name="InitStateDefaults" Id="{373c20ba-9556-4e57-8253-77c7553df9bd}">
+    <Method Name="InitStateDefaults" Id="{b4d87a36-bf40-42c7-a298-e0e252fa8646}">
       <Declaration><![CDATA[(* Full init of every state of astPositionState: gives it its name (sName) and
    its in-position tolerance (fDelta, FDELTA_DEFAULT) by running afbStateDefaults. astPositionState belongs to the caller, so the
    configurators can only be given the slots once this FB holds the caller's
@@ -245,5 +245,33 @@ afbStateDefaults[10].CallAfterInit(
 ]]></ST>
       </Implementation>
     </Method>
+    <LineIds Name="FB_GBS">
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_GBS.CallAfterInit">
+      <LineId Id="3" Count="3" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_GBS.CallAfterInitGBS">
+      <LineId Id="3" Count="16" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_GBS.EnumGet.Get">
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_GBS.EnumSet.Get">
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_GBS.EnumSet.Set">
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_GBS.FB_Init">
+      <LineId Id="3" Count="11" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_GBS.InitStateDefaults">
+      <LineId Id="3" Count="33" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
   </POU>
 </TcPlcObject>

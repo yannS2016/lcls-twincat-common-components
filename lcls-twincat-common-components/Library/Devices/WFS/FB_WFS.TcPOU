@@ -55,7 +55,7 @@ END_VAR]]></Declaration>
     <Implementation>
       <ST><![CDATA[SUPER^();]]></ST>
     </Implementation>
-    <Method Name="CallAfterInit" Id="{2f5a266d-a319-48e1-b797-55a7489c8359}">
+    <Method Name="CallAfterInit" Id="{e1f609f9-eef1-48cc-92bf-c99d3628309f}">
       <Declaration><![CDATA[(* Auto-fired after FB_Init, together with the base CallAfterInit. Binds the
    state bridge to this FB's enum variables and initializes the states. *)
 {attribute 'call_after_init'}
@@ -69,7 +69,7 @@ THIS^.InitStateDefaults();
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="CallAfterInitWFS" Id="{8a40c3bc-e5b7-47ec-8c6d-2ba5964f68de}">
+    <Method Name="CallAfterInitWFS" Id="{63c0bb24-9e2e-4a37-9eaf-f07c3eaa6a66}">
       <Declaration><![CDATA[(* Provides every FB_WFS_Core input, binds the state bridge, initializes the
    states through InitStateDefaults and wires fbStates. FB_Init calls it with the PRG arguments. An FB
    that instantiates FB_WFS inside itself calls it again from its own
@@ -146,7 +146,7 @@ END_VAR
         </Implementation>
       </Set>
     </Property>
-    <Method Name="FB_Init" Id="{4d59ebc2-c21f-4355-9b6d-75854f0da2d1}">
+    <Method Name="FB_Init" Id="{5b2a7d17-d78b-4758-a569-c2bd2d1e7b5e}">
       <Declaration><![CDATA[(* Repeats the eleven FB_WFS_Core inputs, as a derived FB_Init must, and
    forwards them to CallAfterInitWFS, which provides them to the base, binds
    the state bridge and wires the states. Runs before any CallAfterInit. *)
@@ -184,7 +184,7 @@ END_VAR]]></Declaration>
 );]]></ST>
       </Implementation>
     </Method>
-    <Method Name="InitStateDefaults" Id="{373c20ba-9556-4e57-8253-77c7553df9bd}">
+    <Method Name="InitStateDefaults" Id="{2c8380af-274d-42ac-b735-b3e8c5ca4ad1}">
       <Declaration><![CDATA[(* Full init of every state of astPositionState: gives it its name (sName) and
    its in-position tolerance (fDelta, FDELTA_DEFAULT) by running afbStateDefaults. astPositionState belongs to the caller, so the
    configurators can only be given the slots once this FB holds the caller's
@@ -221,5 +221,33 @@ afbStateDefaults[6].CallAfterInit(
 ]]></ST>
       </Implementation>
     </Method>
+    <LineIds Name="FB_WFS">
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_WFS.CallAfterInit">
+      <LineId Id="3" Count="3" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_WFS.CallAfterInitWFS">
+      <LineId Id="3" Count="16" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_WFS.EnumGet.Get">
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_WFS.EnumSet.Get">
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_WFS.EnumSet.Set">
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_WFS.FB_Init">
+      <LineId Id="3" Count="11" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_WFS.InitStateDefaults">
+      <LineId Id="3" Count="21" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
   </POU>
 </TcPlcObject>

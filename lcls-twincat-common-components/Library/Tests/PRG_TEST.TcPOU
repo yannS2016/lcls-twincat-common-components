@@ -48,12 +48,30 @@ VAR
         .axRef[3] := XPIM_Y
     '}
 	fbXPIMTest: FB_XPIMTest;
+    {attribute 'TcNcAxis' := '
+        .axRef := KBO_Y;
+    '}
+	fbKBOTest: FB_KBOTest;
+    {attribute 'TcNcAxis' := '
+        .axRef := COATING_Y;
+    '}
+	fbCoatingNoPMPSTest: FB_Coating_States_NoPMPSTest;
 	fbCCTempSensorTest: FB_CC_TempSensorTest;
-//     fbKBOTest: FB_KBOTest;
-//     fbCoatingNoPMPSTest: FB_Coating_States_NoPMPSTest;
-//     fbSlitsTest: FB_SLITSTest;
-//     fbSlitsPowerTest: FB_SLITS_POWERTest;
-//     fbSlitsThermalTest: FB_SLITS_THERMALTest;
+//     {attribute 'TcNcAxis' := '
+//         .axRef[1] := SLIT_Top;
+//         .axRef[2] := SLIT_Bottom;
+//         .axRef[3] := SLIT_North;
+//         .axRef[4] := SLIT_South
+//     '}
+// 	fbSlitsTest: FB_SLITSTest;
+//     {attribute 'TcNcAxis' := '
+//         .axRef[1] := SLIT_Top_P;
+//         .axRef[2] := SLIT_Bottom_P;
+//         .axRef[3] := SLIT_North_P;
+//         .axRef[4] := SLIT_South_P
+//     '}
+// 	fbSlitsPowerTest: FB_SLITS_POWERTest;
+	fbSlitsThermalTest: FB_SLITS_THERMALTest;
 
 
 

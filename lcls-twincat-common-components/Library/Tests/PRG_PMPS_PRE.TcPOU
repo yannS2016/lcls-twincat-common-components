@@ -9,7 +9,17 @@ END_VAR
 ]]></Declaration>
     <Implementation>
       <ST><![CDATA[GVL_PRG.fbPDS();
+
+GVL_PRG.fbStandardPMPSDB(
+    bEnable := TRUE
+);
 ]]></ST>
     </Implementation>
+    <LineIds Name="PRG_PMPS_PRE">
+      <LineId Id="3" Count="0" />
+      <LineId Id="5" Count="2" />
+      <LineId Id="4" Count="0" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
   </POU>
 </TcPlcObject>

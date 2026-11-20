@@ -23,8 +23,7 @@
    FB_LIC is the library derived type (E_LIC_States).
 
    Caller-owned dependencies are injected through FB_Init as REFERENCE TO and
-   forwarded to fbStates in CallAfterInit. State 1 is OUT, which vetoes the
-   thermocouple. *)
+   forwarded to fbStates in CallAfterInit. *)
 {attribute 'call_after_init'}
 FUNCTION_BLOCK FB_LIC_Core
 VAR

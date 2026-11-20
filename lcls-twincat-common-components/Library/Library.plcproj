@@ -131,16 +131,25 @@
     <Compile Include="Devices\WFS\E_WFS_States.TcDUT">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Devices\WFS\FB_WFS_Core.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Devices\WFS\FB_WFS.TcPOU">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Devices\GBS\E_GBS_States.TcDUT">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Devices\GBS\FB_GBS_Core.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Devices\GBS\FB_GBS.TcPOU">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Devices\IPM\E_IPM_States.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Devices\IPM\FB_IPM_Core.TcPOU">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Devices\IPM\FB_IPM.TcPOU">

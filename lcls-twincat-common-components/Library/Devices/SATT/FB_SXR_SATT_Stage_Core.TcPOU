@@ -60,7 +60,7 @@ VAR
     fbStates : FB_PositionStateND(
         aiMotionStage        := aiMotionStage,
         astPositionState     := astPositionState,
-        nActiveMotorCount    := 1,
+        nActiveMotorCount    := nStateMotorCount,
         eEnumSet             := eEnumSetRef,
         eEnumGet             := eEnumGetRef,
         bEnableMotion        := bEnableMotion,
@@ -109,6 +109,9 @@ VAR
     bEnableMotion    : BOOL := TRUE;
 END_VAR
 VAR CONSTANT
+    (* Number of motors the state mover drives. Every device here has one state
+       motor, in slot 1; the code around fbStates assumes it. *)
+    nStateMotorCount : UINT := 1;
     // State values of the E_SXR_SATT_Position enum: UNKNOWN must be 0, OUT is 1.
     nUnknownState : UINT := 0;
     nOutState     : UINT := 1;
@@ -231,7 +234,7 @@ END_IF
 THIS^.fbStates.CallAfterInitStateMover(
     aiMotionStage         := aiMotionStage,
     astPositionState      := astPositionState,
-    nActiveMotorCount     := 1,
+    nActiveMotorCount     := nStateMotorCount,
     eEnumSet              := eEnumSetRef,
     eEnumGet              := eEnumGetRef,
     bEnableMotion         := bEnableMotion,

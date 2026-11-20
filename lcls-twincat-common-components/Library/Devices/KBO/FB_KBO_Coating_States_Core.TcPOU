@@ -59,7 +59,7 @@ VAR
     fbStates : FB_PositionStatePMPSND(
         aiMotionStage         := aiMotionStage,
         astPositionState      := astPositionState,
-        nActiveMotorCount     := 1,
+        nActiveMotorCount     := nStateMotorCount,
         eEnumSet              := eEnumSetRef,
         eEnumGet              := eEnumGetRef,
         bEnableMotion         := bEnableMotion,
@@ -80,6 +80,9 @@ VAR_OUTPUT
     stDbStateParams: ST_DbStateParams;
 END_VAR
 VAR CONSTANT
+    (* Number of motors the state mover drives. Every device here has one state
+       motor, in slot 1; the code around fbStates assumes it. *)
+    nStateMotorCount : UINT := 1;
     // State in-position tolerance, applied per-state by afbStateDefaults.
     // Units in Millimeters (matches prior install values).
     FDELTA_DEFAULT  : LREAL := 0.1;
@@ -136,7 +139,7 @@ END_IF
 THIS^.fbStates.CallAfterInitStateMover(
     aiMotionStage         := aiMotionStage,
     astPositionState      := astPositionState,
-    nActiveMotorCount     := 1,
+    nActiveMotorCount     := nStateMotorCount,
     eEnumSet              := eEnumSetRef,
     eEnumGet              := eEnumGetRef,
     bEnableMotion         := bEnableMotion,
